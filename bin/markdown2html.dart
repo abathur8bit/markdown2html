@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:markdown2html/version.dart';
 import 'package:mustache_template/mustache_template.dart';
 
 void main(List<String> arguments) {
@@ -335,6 +336,10 @@ void main(List<String> arguments) {
 <body>
   <div class="layout">
     <aside class="sidebar">
+      <div class="doc-top-nav">
+          <a href="/">&larr; BookmarkSquirrel.com</a>
+      </div>
+      <h1>Documentation</h1>
       <h2>Contents</h2>
       <ul>
         {{#sidebarItems}}
@@ -464,6 +469,7 @@ void _cleanDirectory(Directory directory) {
 }
 
 void _printUsage(ArgParser parser) {
+  stdout.writeln("Version: $appVersion");
   stdout.writeln('''
 Usage:
   dart run bin/mdsite.dart --input <inputDir> --output <outputDir>

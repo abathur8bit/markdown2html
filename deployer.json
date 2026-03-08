@@ -1,0 +1,43 @@
+{
+  "name": "VersionUtil",
+  "steps": [
+    {
+      "name": "inc-version",
+      "type": {
+        "type": "version",
+        "command": "versionutil",
+        "params": []
+      }
+    },
+    {
+      "name": "get-version",
+      "type": {
+        "type": "version",
+        "command": "versionutil",
+        "params": [
+          "-s"
+        ]
+      }
+    },
+    {
+      "name": "build",
+      "type": {
+        "type": "execute",
+        "command": "dart",
+        "params": [
+          "compile","exe","bin/markdown2html.dart","-o","markdown2html.exe"
+        ]
+      }
+    },
+    {
+      "name": "deploy",
+      "type": {
+        "type": "execute",
+        "command": "copy",
+        "params": [
+          "/Y","markdown2html.exe","\\util\\lee"
+        ]
+      }
+    }
+  ]
+}
