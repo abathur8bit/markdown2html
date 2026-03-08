@@ -73,8 +73,16 @@ void main(List<String> arguments) {
 
   outputDir.createSync(recursive: true);
 
-  final markdownFilesByRelativePath = _discoverMarkdownFiles(inputDir);
-  final wikiLookup = _buildWikiLookup(markdownFilesByRelativePath.keys);
+  final allFilesByRelativePath = _discoverFiles(inputDir);
+  final markdownFilesByRelativePath = {
+    for (final entry in allFilesByRelativePath.entries)
+      if (entry.key.toLowerCase().endsWith('.md')) entry.key: entry.value,
+  };
+
+  final wikiLookup = _buildLookup(markdownFilesByRelativePath.keys);
+  final assetLookup = _buildLookup(
+    allFilesByRelativePath.keys.where((path) => !path.toLowerCase().endsWith('.md')),
+  );
 
   final orderedManifest = _parseIndexOrderFromWikiLinks(indexFile, wikiLookup);
 
@@ -313,6 +321,8 @@ void main(List<String> arguments) {
       outputDirPath: outputDir.path,
       pageByMarkdownPath: pageByMarkdownPath,
       wikiLookup: wikiLookup,
+      assetLookup: assetLookup,
+      inputDirPath: inputDir.path,
     );
 
     final renderedMarkdown = md.markdownToHtml(
@@ -389,7 +399,8 @@ List<String> _extractWikiTargets(String markdownText) {
   final matches = RegExp(r'\[\[([^\[\]]+)\]\]').allMatches(markdownText);
   return [
     for (final match in matches)
-      if ((match.group(1) ?? '').trim().isNotEmpty) (match.group(1) ?? '').trim(),
+      if (match.start == 0 || markdownText[match.start - 1] != '!')
+        if ((match.group(1) ?? '').trim().isNotEmpty) (match.group(1) ?? '').trim(),
   ];
 }
 
@@ -400,15 +411,47 @@ String _replaceWikiLinks({
   required String outputDirPath,
   required Map<String, PageInfo> pageByMarkdownPath,
   required Map<String, List<String>> wikiLookup,
+  required Map<String, List<String>> assetLookup,
+  required String inputDirPath,
 }) {
   return markdownText.replaceAllMapped(
-    RegExp(r'\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]'),
+    RegExp(r'(!)?\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]'),
         (match) {
-      final rawTarget = match.group(1)?.trim();
-      final rawLabel = match.group(2)?.trim();
+      final isImageWikiLink = match.group(1) == '!';
+      final rawTarget = match.group(2)?.trim();
+      final rawLabel = match.group(3)?.trim();
 
       if (rawTarget == null || rawTarget.isEmpty) {
         return match.group(0)!;
+      }
+
+      if (isImageWikiLink) {
+        final resolvedAssetPath = _resolveAssetTarget(
+          rawTarget,
+          currentMarkdownRelativePath,
+          assetLookup,
+        );
+
+        if (resolvedAssetPath == null) {
+          stderr.writeln(
+            'Warning: could not resolve wiki image link "![[${rawTarget}]]" in $currentMarkdownRelativePath',
+          );
+          return match.group(0)!;
+        }
+
+        final sourceAssetPath = _join(inputDirPath, resolvedAssetPath);
+        final copiedAssetPath = _join(outputDirPath, resolvedAssetPath);
+
+        File(copiedAssetPath).parent.createSync(recursive: true);
+        File(sourceAssetPath).copySync(copiedAssetPath);
+
+        final href = _relativePath(
+          fromDirectory: currentOutputDir,
+          toFile: copiedAssetPath,
+        );
+
+        final altText = rawLabel ?? _basenameWithoutExtension(resolvedAssetPath);
+        return '![${_escapeMarkdownLinkText(altText)}](${_encodeUrlPath(href)})';
       }
 
       final resolvedMarkdownPath = _resolveWikiTarget(
@@ -456,6 +499,41 @@ String _escapeMarkdownLinkText(String text) {
   return text.replaceAll('[', r'\[').replaceAll(']', r'\]');
 }
 
+
+
+String _basenameWithoutExtension(String path) {
+  final basename = path.split('/').last;
+  return basename.replaceFirst(RegExp(r'\.[^.]+$'), '');
+}
+
+String? _resolveAssetTarget(
+  String rawTarget,
+  String currentMarkdownRelativePath,
+  Map<String, List<String>> assetLookup,
+) {
+  final normalizedTarget = rawTarget.replaceAll('\\', '/').trim();
+
+  final exactKey = _wikiKey(normalizedTarget);
+  final exactMatches = assetLookup[exactKey];
+  if (exactMatches != null && exactMatches.length == 1) {
+    return exactMatches.first;
+  }
+  if (exactMatches != null && exactMatches.isNotEmpty) {
+    return _preferClosestPath(currentMarkdownRelativePath, exactMatches);
+  }
+
+  final basename = normalizedTarget.split('/').last;
+  final baseKey = _wikiKey(basename);
+  final baseMatches = assetLookup[baseKey];
+  if (baseMatches != null && baseMatches.length == 1) {
+    return baseMatches.first;
+  }
+  if (baseMatches != null && baseMatches.isNotEmpty) {
+    return _preferClosestPath(currentMarkdownRelativePath, baseMatches);
+  }
+
+  return null;
+}
 
 String? _resolveWikiTarget(
     String rawTarget,
@@ -517,7 +595,7 @@ int _pathDistance(String a, String b) {
   return (aParts.length - common) + (bParts.length - common);
 }
 
-Map<String, String> _discoverMarkdownFiles(Directory inputDir) {
+Map<String, String> _discoverFiles(Directory inputDir) {
   final files = <String, String>{};
 
   for (final entity in inputDir.listSync(recursive: true, followLinks: false)) {
@@ -526,10 +604,6 @@ Map<String, String> _discoverMarkdownFiles(Directory inputDir) {
     }
 
     final fullPath = entity.path;
-    if (!fullPath.toLowerCase().endsWith('.md')) {
-      continue;
-    }
-
     final relativePath = _relativePath(
       fromDirectory: inputDir.path,
       toFile: fullPath,
@@ -541,10 +615,10 @@ Map<String, String> _discoverMarkdownFiles(Directory inputDir) {
   return files;
 }
 
-Map<String, List<String>> _buildWikiLookup(Iterable<String> markdownRelativePaths) {
+Map<String, List<String>> _buildLookup(Iterable<String> relativePaths) {
   final map = <String, List<String>>{};
 
-  for (final path in markdownRelativePaths) {
+  for (final path in relativePaths) {
     final normalized = _normalizeRelativePath(path);
     final fullKey = _wikiKey(normalized);
     final baseKey = _wikiKey(normalized.split('/').last);
