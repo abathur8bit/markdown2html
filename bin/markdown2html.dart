@@ -319,6 +319,14 @@ void main(List<String> arguments) {
       color: var(--muted);
     }
 
+    .footer-muted {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
     @media (max-width: 900px) {
       .layout {
         flex-direction: column;
@@ -351,6 +359,11 @@ void main(List<String> arguments) {
     </aside>
     <main class="content">
       {{{content}}}
+      {{#footerContent}}
+      <footer class="footer-muted">
+        {{{footerContent}}}
+      </footer>
+      {{/footerContent}}
     </main>
   </div>
   <div class="lightbox" id="lightbox" aria-hidden="true">
@@ -411,6 +424,10 @@ void main(List<String> arguments) {
     lenient: true,
   );
 
+  final footerRelativePath = '999-footer.md';
+  final footerSourceFile = File(_join(inputDir.path, footerRelativePath));
+  final hasFooter = footerSourceFile.existsSync();
+
   for (final page in pages) {
     final sourceFile = File(_join(inputDir.path, page.markdownRelativePath));
     final markdownText = sourceFile.readAsStringSync();
@@ -429,10 +446,46 @@ void main(List<String> arguments) {
       inputDirPath: inputDir.path,
     );
 
+    final markdownWithResolvedHtmlImages = _replaceHtmlImageSources(
+      markdownText: preprocessedMarkdown,
+      currentMarkdownRelativePath: page.markdownRelativePath,
+      currentOutputDir: currentOutputDir,
+      outputDirPath: outputDir.path,
+      assetLookup: assetLookup,
+      inputDirPath: inputDir.path,
+    );
+
     final renderedMarkdown = md.markdownToHtml(
-      preprocessedMarkdown,
+      markdownWithResolvedHtmlImages,
       extensionSet: md.ExtensionSet.gitHubWeb,
     );
+
+    String? renderedFooter;
+    if (hasFooter) {
+      final footerMarkdownText = footerSourceFile.readAsStringSync();
+      final preprocessedFooter = _replaceHtmlImageSources(
+        markdownText: _replaceWikiLinks(
+          markdownText: footerMarkdownText,
+          currentMarkdownRelativePath: footerRelativePath,
+          currentOutputDir: currentOutputDir,
+          outputDirPath: outputDir.path,
+          pageByMarkdownPath: pageByMarkdownPath,
+          wikiLookup: wikiLookup,
+          assetLookup: assetLookup,
+          inputDirPath: inputDir.path,
+        ),
+        currentMarkdownRelativePath: footerRelativePath,
+        currentOutputDir: currentOutputDir,
+        outputDirPath: outputDir.path,
+        assetLookup: assetLookup,
+        inputDirPath: inputDir.path,
+      );
+
+      renderedFooter = md.markdownToHtml(
+        preprocessedFooter,
+        extensionSet: md.ExtensionSet.gitHubWeb,
+      );
+    }
 
     final sidebarItems = pages.map((p) {
       final targetHtmlFullPath = _join(outputDir.path, p.htmlRelativePath);
@@ -452,6 +505,7 @@ void main(List<String> arguments) {
       'pageTitle': page.title,
       'content': renderedMarkdown,
       'sidebarItems': sidebarItems,
+      'footerContent': renderedFooter,
     });
 
     final outFile = File(pageHtmlFullPath);
@@ -604,6 +658,93 @@ String _encodeUrlPath(String path) {
       .split('/')
       .map(Uri.encodeComponent)
       .join('/');
+}
+
+String _replaceHtmlImageSources({
+  required String markdownText,
+  required String currentMarkdownRelativePath,
+  required String currentOutputDir,
+  required String outputDirPath,
+  required Map<String, List<String>> assetLookup,
+  required String inputDirPath,
+}) {
+  final imageTagPattern = RegExp(
+    r"""<img\b[^>]*\bsrc\s*=\s*(?:\"([^\"]+)\"|'([^']+)'|([^\s>]+))[^>]*>""",
+    caseSensitive: false,
+  );
+
+  return markdownText.replaceAllMapped(imageTagPattern, (match) {
+    final rawSource = (match.group(1) ?? match.group(2) ?? match.group(3) ?? '').trim();
+    if (rawSource.isEmpty) {
+      return match.group(0)!;
+    }
+
+    if (_isExternalSource(rawSource)) {
+      return match.group(0)!;
+    }
+
+    final sourceWithoutQuery = rawSource.split('?').first.split('#').first;
+    final resolvedAssetPath = _resolveAssetTarget(
+      Uri.decodeFull(sourceWithoutQuery),
+      currentMarkdownRelativePath,
+      assetLookup,
+    );
+
+    if (resolvedAssetPath == null) {
+      stderr.writeln(
+        'Warning: could not resolve html image src "$rawSource" in $currentMarkdownRelativePath',
+      );
+      return match.group(0)!;
+    }
+
+    final sourceAssetPath = _join(inputDirPath, resolvedAssetPath);
+    final copiedAssetPath = _join(outputDirPath, resolvedAssetPath);
+
+    File(copiedAssetPath).parent.createSync(recursive: true);
+    File(sourceAssetPath).copySync(copiedAssetPath);
+
+    final href = _relativePath(
+      fromDirectory: currentOutputDir,
+      toFile: copiedAssetPath,
+    );
+
+    final replacementSrc = _encodeUrlPath(href);
+    final originalTag = match.group(0)!;
+
+    final doubleQuoted = RegExp(
+      r'(src\s*=\s*")([^"]*)(")',
+      caseSensitive: false,
+    );
+    if (doubleQuoted.hasMatch(originalTag)) {
+      return originalTag.replaceFirstMapped(
+        doubleQuoted,
+        (m) => '${m.group(1)}$replacementSrc${m.group(3)}',
+      );
+    }
+
+    final singleQuoted = RegExp(r"(?i)(src\s*=\s*')([^']*)(')");
+    if (singleQuoted.hasMatch(originalTag)) {
+      return originalTag.replaceFirstMapped(
+        singleQuoted,
+        (m) => '${m.group(1)}$replacementSrc${m.group(3)}',
+      );
+    }
+
+    final unquoted = RegExp(r'(?i)(src\s*=\s*)([^\s>]+)');
+    return originalTag.replaceFirstMapped(
+      unquoted,
+      (m) => '${m.group(1)}$replacementSrc',
+    );
+  });
+}
+
+bool _isExternalSource(String source) {
+  final lower = source.toLowerCase();
+  return lower.startsWith('http://') ||
+      lower.startsWith('https://') ||
+      lower.startsWith('data:') ||
+      lower.startsWith('//') ||
+      lower.startsWith('mailto:');
 }
 
 String _escapeMarkdownLinkText(String text) {
