@@ -17,6 +17,11 @@ void main(List<String> arguments) {
       help: 'Output directory where html files will be written.',
     )
     ..addFlag(
+      'clean',
+      negatable: false,
+      help: 'Delete all existing files and directories in the output directory before generating.',
+    )
+    ..addFlag(
       'help',
       abbr: 'h',
       negatable: false,
@@ -40,6 +45,7 @@ void main(List<String> arguments) {
 
   final inputPath = results['input'] as String?;
   final outputPath = results['output'] as String?;
+  final cleanOutput = results['clean'] == true;
 
   if (inputPath == null || inputPath.trim().isEmpty) {
     stderr.writeln('Missing required option: --input');
@@ -69,6 +75,10 @@ void main(List<String> arguments) {
     stderr.writeln('00-index.md not found in input directory: ${inputDir.path}');
     exitCode = 66;
     return;
+  }
+
+  if (cleanOutput && outputDir.existsSync()) {
+    _cleanDirectory(outputDir);
   }
 
   outputDir.createSync(recursive: true);
@@ -355,6 +365,12 @@ void main(List<String> arguments) {
     outFile.writeAsStringSync(html);
 
     stdout.writeln('Wrote ${page.htmlRelativePath}');
+  }
+}
+
+void _cleanDirectory(Directory directory) {
+  for (final entity in directory.listSync(followLinks: false)) {
+    entity.deleteSync(recursive: true);
   }
 }
 
