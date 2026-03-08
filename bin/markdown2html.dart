@@ -246,6 +246,47 @@ void main(List<String> arguments) {
     .content img {
       max-width: 100%;
       height: auto;
+      cursor: zoom-in;
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 999;
+      padding: 1.5rem;
+      cursor: zoom-out;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+      border-radius: 4px;
+      cursor: auto;
+    }
+
+    .lightbox .close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      border: none;
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+      font-size: 1.5rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      cursor: pointer;
+      line-height: 1;
     }
 
     .content pre {
@@ -307,6 +348,54 @@ void main(List<String> arguments) {
       {{{content}}}
     </main>
   </div>
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="close" id="lightbox-close" aria-label="Close enlarged image">×</button>
+    <img id="lightbox-image" src="" alt="">
+  </div>
+  <script>
+    (() => {
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImage = document.getElementById('lightbox-image');
+      const closeButton = document.getElementById('lightbox-close');
+      if (!lightbox || !lightboxImage || !closeButton) {
+        return;
+      }
+
+      const closeLightbox = () => {
+        lightbox.classList.remove('open');
+        lightbox.setAttribute('aria-hidden', 'true');
+        lightboxImage.removeAttribute('src');
+        lightboxImage.alt = '';
+      };
+
+      document.querySelectorAll('.content img').forEach((image) => {
+        image.addEventListener('click', () => {
+          const source = image.getAttribute('src');
+          if (!source) {
+            return;
+          }
+
+          lightboxImage.src = source;
+          lightboxImage.alt = image.getAttribute('alt') || '';
+          lightbox.classList.add('open');
+          lightbox.setAttribute('aria-hidden', 'false');
+        });
+      });
+
+      closeButton.addEventListener('click', closeLightbox);
+      lightbox.addEventListener('click', (event) => {
+        if (event.target === lightbox) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && lightbox.classList.contains('open')) {
+          closeLightbox();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
 ''';
