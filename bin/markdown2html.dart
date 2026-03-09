@@ -178,12 +178,28 @@ void main(List<String> arguments) {
   {{/faviconLinks}}
   <style>
     :root {
+      color-scheme: light dark;
       --bg: #ffffff;
       --fg: #1f2937;
       --muted: #6b7280;
       --border: #e5e7eb;
       --sidebar-bg: #f9fafb;
       --active-bg: #e0ecff;
+      --hover-bg: #eef2f7;
+      --code-bg: #f4f4f5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --fg: #e5e7eb;
+        --muted: #9ca3af;
+        --border: #334155;
+        --sidebar-bg: #111827;
+        --active-bg: #1e3a8a;
+        --hover-bg: #1f2937;
+        --code-bg: #1e293b;
+      }
     }
 
     * { box-sizing: border-box; }
@@ -233,7 +249,7 @@ void main(List<String> arguments) {
     }
 
     .sidebar a:hover {
-      background: #eef2f7;
+      background: var(--hover-bg);
     }
 
     .sidebar a.active {
@@ -297,7 +313,7 @@ void main(List<String> arguments) {
     .content pre {
       overflow-x: auto;
       padding: 0.75rem;
-      background: #f4f4f5;
+      background: var(--code-bg);
       border-radius: 6px;
     }
 
