@@ -94,6 +94,7 @@ void main(List<String> arguments) {
   final assetLookup = _buildLookup(
     allFilesByRelativePath.keys.where((path) => !path.toLowerCase().endsWith('.md')),
   );
+  final faviconAssets = _findFaviconAssets(allFilesByRelativePath.keys);
 
   final orderedManifest = _parseIndexOrderFromWikiLinks(indexFile, wikiLookup);
 
@@ -172,6 +173,9 @@ void main(List<String> arguments) {
   <meta charset="utf-8">
   <title>{{pageTitle}}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{#faviconLinks}}
+  <link rel="icon" href="{{href}}" sizes="{{sizes}}" type="image/png">
+  {{/faviconLinks}}
   <style>
     :root {
       --bg: #ffffff;
@@ -501,11 +505,30 @@ void main(List<String> arguments) {
       };
     }).toList();
 
+    final faviconLinks = faviconAssets.map((faviconAsset) {
+      final sourceAssetPath = _join(inputDir.path, faviconAsset.path);
+      final copiedAssetPath = _join(outputDir.path, faviconAsset.path);
+
+      File(copiedAssetPath).parent.createSync(recursive: true);
+      File(sourceAssetPath).copySync(copiedAssetPath);
+
+      return {
+        'href': _encodeUrlPath(
+          _relativePath(
+            fromDirectory: currentOutputDir,
+            toFile: copiedAssetPath,
+          ),
+        ),
+        'sizes': faviconAsset.sizes,
+      };
+    }).toList();
+
     final html = template.renderString({
       'pageTitle': page.title,
       'content': renderedMarkdown,
       'sidebarItems': sidebarItems,
       'footerContent': renderedFooter,
+      'faviconLinks': faviconLinks,
     });
 
     final outFile = File(pageHtmlFullPath);
@@ -970,5 +993,39 @@ class PageInfo {
     required this.htmlRelativePath,
     required this.title,
     this.isIndex = false,
+  });
+}
+
+List<FaviconAsset> _findFaviconAssets(Iterable<String> relativePaths) {
+  final faviconPattern = RegExp(r'^favicon-(\d+x\d+)\.png$', caseSensitive: false);
+  final favicons = <FaviconAsset>[];
+
+  for (final path in relativePaths) {
+    final normalized = _normalizeRelativePath(path);
+    final basename = normalized.split('/').last;
+    final match = faviconPattern.firstMatch(basename);
+    if (match == null) {
+      continue;
+    }
+
+    favicons.add(
+      FaviconAsset(
+        path: normalized,
+        sizes: match.group(1)!,
+      ),
+    );
+  }
+
+  favicons.sort((a, b) => a.path.compareTo(b.path));
+  return favicons;
+}
+
+class FaviconAsset {
+  final String path;
+  final String sizes;
+
+  FaviconAsset({
+    required this.path,
+    required this.sizes,
   });
 }
