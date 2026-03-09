@@ -10,7 +10,7 @@ void main(List<String> arguments) {
     ..addOption(
       'input',
       abbr: 'i',
-      help: 'Input directory containing 00-index.md and markdown files.',
+      help: 'Input directory containing 000-index.md and markdown files.',
     )
     ..addOption(
       'output',
@@ -71,9 +71,9 @@ void main(List<String> arguments) {
     return;
   }
 
-  final indexFile = File(_join(inputDir.path, '00-index.md'));
+  final indexFile = File(_join(inputDir.path, '000-index.md'));
   if (!indexFile.existsSync()) {
-    stderr.writeln('00-index.md not found in input directory: ${inputDir.path}');
+    stderr.writeln('000-index.md not found in input directory: ${inputDir.path}');
     exitCode = 66;
     return;
   }
@@ -107,17 +107,17 @@ void main(List<String> arguments) {
     }
   }
 
-  addPage('00-index.md');
+  addPage('000-index.md');
 
   for (final path in orderedManifest) {
-    if (path.toLowerCase() == '00-index.md') {
+    if (path.toLowerCase() == '000-index.md') {
       continue;
     }
     addPage(path);
   }
 
   // Recursively include wiki-linked files from all included pages,
-  // even if they were not listed in 00-index.md.
+  // even if they were not listed in 000-index.md.
   for (int i = 0; i < pageOrder.length; i++) {
     final currentMarkdownPath = pageOrder[i];
     final sourceFile = File(_join(inputDir.path, currentMarkdownPath));
@@ -153,11 +153,11 @@ void main(List<String> arguments) {
     for (final markdownPath in pageOrder)
       PageInfo(
         markdownRelativePath: markdownPath,
-        htmlRelativePath: markdownPath.toLowerCase() == '00-index.md'
+        htmlRelativePath: markdownPath.toLowerCase() == '000-index.md'
             ? 'index.html'
             : _markdownPathToHtml(markdownPath),
         title: _extractTitle(File(_join(inputDir.path, markdownPath))),
-        isIndex: markdownPath.toLowerCase() == '00-index.md',
+        isIndex: markdownPath.toLowerCase() == '000-index.md',
       ),
   ];
 
@@ -544,10 +544,10 @@ List<String> _parseIndexOrderFromWikiLinks(
   final seen = <String>{};
 
   for (final rawTarget in rawTargets) {
-    final resolved = _resolveWikiTarget(rawTarget, '00-index.md', wikiLookup);
+    final resolved = _resolveWikiTarget(rawTarget, '000-index.md', wikiLookup);
     if (resolved == null) {
       stderr.writeln(
-        'Warning: could not resolve wiki link "[[$rawTarget]]" in 00-index.md',
+        'Warning: could not resolve wiki link "[[$rawTarget]]" in 000-index.md',
       );
       continue;
     }
