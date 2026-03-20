@@ -257,6 +257,19 @@ void main(List<String> arguments) {
       font-weight: bold;
     }
 
+    .doc-top-nav {
+      margin-bottom: 1.5rem;
+    }
+    
+    .sidebar-logo {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    .sidebar-logo img {
+      display: inline-block;
+    }
     .content {
       flex: 1;
       min-width: 0;
@@ -265,7 +278,9 @@ void main(List<String> arguments) {
     }
 
     .content img {
-      max-width: 100%;
+      display: block;
+      margin: 0 auto;
+      max-width: 80%;
       height: auto;
       cursor: zoom-in;
     }
@@ -333,10 +348,26 @@ void main(List<String> arguments) {
     }
 
     .content blockquote {
-      border-left: 4px solid var(--border);
-      margin-left: 0;
-      padding-left: 1rem;
-      color: var(--muted);
+      position: relative;
+      margin: 0;
+      padding: 1.5rem 1.25rem 1rem 1.25rem; /* extra top padding for Note text */
+      color: #24505a;
+    
+      background: #e6fbff;
+      border: 1px solid #7fc7d1;
+      border-radius: 8px;
+    }
+    
+    .content blockquote::before {
+      content: "Note";
+      position: absolute;
+      top: 1rem;
+      left: 1.1rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #2b6f7a;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     .footer-muted {
@@ -366,6 +397,9 @@ void main(List<String> arguments) {
     <aside class="sidebar">
       <div class="doc-top-nav">
           <a href="/">&larr; BookmarkSquirrel.com</a>
+      </div>
+      <div class="sidebar-logo">
+        <img src="/documentation/bookmarksquirrel-logo.webp" width="128" alt="Bookmark Squirrel logo">
       </div>
       <h1>Documentation</h1>
       <h2>Contents</h2>
