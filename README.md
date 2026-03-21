@@ -1,19 +1,34 @@
-Converts a markdown directory into a web site with static pages. 
+Converts a markdown directory into a website with static pages. 
 
-Configuration file:
+Configuration file controls a few things for the output. 
+
+| Config | Notes | Example |
+|--|--|
+| `logo` | The logo file that will be shown at the top of the sidebar. | `logo.webp` |
+| `logoAlt` | the alt text for readers | `Site Logo` |
+| `css` | The css file to be included in all pages. | `site.css` |
+| `favicons` | Include or not any favicon* files found. | `true` |
+| `sitebarTitle` | The text that will be shown bwteen the top of all site links and under the logo. `null` to not include one. | `Your site name` |
+| `footer` | If not `null` include the markdown in the specified markdown file.  | `999-footer.md` |
+| `top-nav` | If not `null` there will be a link above the logo. For a documentation site, this might point back to the main site. | `{"url":"/","title":"Top Link"}` |
+
 ```json
- {
+{
   "logo": "logo.webp",
   "logoAlt": "Site logo",
   "css": "site.css",
   "favicons": true,
-  "sidebarTitle": "Sidebar Title",
-  "footer": "999-footer.md"
+  "sidebarTitle":"Your site name",
+  "footer": null,
+  "top-nav": {
+    "url": "/",
+    "title": "Top Link"
+  }
 }
+
 ```
 
-CSS is embedded in each page.
-
+# Fav Icons
 `favicons` when true will include the following in the head tag. The filenames are whatever youor favicons
 are, but are expected to be png images with a similar nameing format.
 
@@ -24,7 +39,9 @@ are, but are expected to be png images with a similar nameing format.
 ```
 
 # Block quotes
-Two examples of block quotes. One is just a nice rounded box to highlight text:
+In the `site.css` is a `blockquote` tag to handle markdown block quotes. 
+Two examples of block quotes. One is just a nice rounded box to highlight 
+text:
 
 ## Plain
 ```html
@@ -66,6 +83,8 @@ The other will add a 'NOTE' to the top of the text:
 ```
 
 ## Standard block quote
+Something you would see in Obsidian.
+
 ```html
 blockquote {
   margin: 1rem 0;

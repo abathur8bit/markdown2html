@@ -231,15 +231,17 @@ void main(List<String> arguments) {
 <body>
   <div class="layout">
     <aside class="sidebar">
-      <div class="doc-top-nav">
-          <a href="/">&larr; BookmarkSquirrel.com</a>
-      </div>
+      {{#topNav}}
+      <div class="doc-top-nav"><a href="{{url}}">{{title}}</a></div>
+      {{/topNav}}
       {{#sidebarLogo}}
       <div class="sidebar-logo">
         <img src="{{src}}" alt="{{alt}}">
       </div>
       {{/sidebarLogo}}
+      {{#sidebarTitle}}
       <h1>{{sidebarTitle}}</h1>
+      {{/sidebarTitle}}
       <ul>
         {{#sidebarItems}}
         <li>
@@ -433,6 +435,10 @@ void main(List<String> arguments) {
       'inlineCss': inlineCss,
       'sidebarTitle': config.sidebarTitle,
       'sidebarLogo': sidebarLogo,
+      'topNav': config.topNav == null ? null : {
+        'url': config.topNav!.url,
+        'title': config.topNav!.title,
+      },
     });
 
     final outFile = File(pageHtmlFullPath);
@@ -455,6 +461,10 @@ void _createConfigFile(String directoryPath) {
     'favicons': true,
     'sidebarTitle': 'Your site',
     'footer': '999-footer.md',
+    'top-nav': {
+      'url': '/',
+      'title': 'Home',
+    },
   };
 
   const encoder = JsonEncoder.withIndent('  ');
@@ -1043,8 +1053,9 @@ class Markdown2HtmlConfig {
   final String? logoAlt;
   final String? css;
   final bool favicons;
-  final String sidebarTitle;
+  final String? sidebarTitle;
   final String? footer;
+  final TopNavConfig? topNav;
 
   const Markdown2HtmlConfig({
     this.logo = 'logo.webp',
@@ -1053,6 +1064,7 @@ class Markdown2HtmlConfig {
     this.favicons = true,
     this.sidebarTitle = 'Your site',
     this.footer = '999-footer.md',
+    this.topNav = const TopNavConfig(),
   });
 
   factory Markdown2HtmlConfig.fromJson(Map<String, dynamic> json) {
@@ -1061,10 +1073,49 @@ class Markdown2HtmlConfig {
       logoAlt: _readNullableString(json, 'logoAlt', fallback: 'Site logo'),
       css: _readNullableString(json, 'css', fallback: 'site.css'),
       favicons: _readBool(json, 'favicons', fallback: true),
-      sidebarTitle: _readNullableString(json, 'sidebarTitle', fallback: 'Your site') ?? 'Your site',
+      sidebarTitle: _readNullableString(json, 'sidebarTitle', fallback: 'Your site'),
       footer: _readNullableString(json, 'footer', fallback: '999-footer.md'),
+      topNav: _readTopNavConfig(json, 'top-nav', fallback: const TopNavConfig()),
     );
   }
+}
+
+class TopNavConfig {
+  final String url;
+  final String title;
+
+  const TopNavConfig({
+    this.url = '/',
+    this.title = 'Home',
+  });
+}
+
+
+TopNavConfig? _readTopNavConfig(
+  Map<String, dynamic> json,
+  String key, {
+  TopNavConfig? fallback,
+}) {
+  if (!json.containsKey(key)) {
+    return fallback;
+  }
+
+  final value = json[key];
+  if (value == null) {
+    return null;
+  }
+  if (value is! Map<String, dynamic>) {
+    throw FormatException('Config value "$key" must be an object or null.');
+  }
+
+  final url = _readNullableString(value, 'url');
+  final title = _readNullableString(value, 'title');
+
+  if (url == null || title == null) {
+    throw FormatException('Config value "$key" must include non-empty string values for "url" and "title".');
+  }
+
+  return TopNavConfig(url: url, title: title);
 }
 
 String? _readNullableString(
