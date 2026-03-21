@@ -12,6 +12,7 @@ dependencies:
   args: ^2.7.0
   markdown: ^7.2.1
   mustache_template: ^2.0.0
+  html: ^0.15.0
 
 dev_dependencies:
   lints: ^6.0.0

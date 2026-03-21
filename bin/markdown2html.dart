@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:markdown2html/version.dart';
 import 'package:mustache_template/mustache_template.dart';
+import 'package:html/parser.dart' as html_parser;
 
 void main(List<String> arguments) {
   final parser = ArgParser()
@@ -21,6 +23,11 @@ void main(List<String> arguments) {
       'clean',
       negatable: false,
       help: 'Delete all existing files and directories in the output directory before generating.',
+    )
+    ..addFlag(
+      'create-config',
+      negatable: false,
+      help: 'Create a pretty-formatted markdown2html.json config file in --input or the current directory.',
     )
     ..addFlag(
       'help',
@@ -47,6 +54,17 @@ void main(List<String> arguments) {
   final inputPath = results['input'] as String?;
   final outputPath = results['output'] as String?;
   final cleanOutput = results['clean'] == true;
+  final createConfig = results['create-config'] == true;
+
+  if (createConfig) {
+    final configDirectoryPath = (inputPath != null && inputPath.trim().isNotEmpty)
+        ? inputPath
+        : Directory.current.path;
+    _createConfigFile(configDirectoryPath);
+    if (outputPath == null || outputPath.trim().isEmpty) {
+      return;
+    }
+  }
 
   if (inputPath == null || inputPath.trim().isEmpty) {
     stderr.writeln('Missing required option: --input');
@@ -68,6 +86,15 @@ void main(List<String> arguments) {
   if (!inputDir.existsSync()) {
     stderr.writeln('Input directory does not exist: ${inputDir.path}');
     exitCode = 66;
+    return;
+  }
+
+  late final Markdown2HtmlConfig config;
+  try {
+    config = _loadConfig(inputDir);
+  } on FormatException catch (e) {
+    stderr.writeln('Config error: $e');
+    exitCode = 65;
     return;
   }
 
@@ -94,7 +121,21 @@ void main(List<String> arguments) {
   final assetLookup = _buildLookup(
     allFilesByRelativePath.keys.where((path) => !path.toLowerCase().endsWith('.md')),
   );
-  final faviconAssets = _findFaviconAssets(allFilesByRelativePath.keys);
+  final faviconAssets = config.favicons
+      ? _findFaviconAssets(allFilesByRelativePath.keys)
+      : const <FaviconAsset>[];
+
+  final cssRelativePath = config.css;
+  String? inlineCss;
+  if (cssRelativePath != null) {
+    final cssSourceFile = File(_join(inputDir.path, cssRelativePath));
+    if (!cssSourceFile.existsSync()) {
+      stderr.writeln('Configured CSS file not found: $cssRelativePath');
+      exitCode = 66;
+      return;
+    }
+    inlineCss = cssSourceFile.readAsStringSync();
+  }
 
   final indexSections = _splitIndexContents(indexFile.readAsStringSync());
   final orderedManifest = _parseIndexOrderFromWikiLinks(
@@ -121,8 +162,6 @@ void main(List<String> arguments) {
     addPage(path);
   }
 
-  // Recursively include wiki-linked files from all included pages,
-  // even if they were not listed in 000-index.md.
   for (int i = 0; i < pageOrder.length; i++) {
     final currentMarkdownPath = pageOrder[i];
     final sourceFile = File(_join(inputDir.path, currentMarkdownPath));
@@ -183,221 +222,11 @@ void main(List<String> arguments) {
   {{#faviconLinks}}
   <link rel="icon" href="{{href}}" sizes="{{sizes}}" type="image/png">
   {{/faviconLinks}}
+  {{#inlineCss}}
   <style>
-    :root {
-      color-scheme: light dark;
-      --bg: #ffffff;
-      --fg: #1f2937;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --sidebar-bg: #f9fafb;
-      --active-bg: #e0ecff;
-      --hover-bg: #eef2f7;
-      --code-bg: #f4f4f5;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0f172a;
-        --fg: #e5e7eb;
-        --muted: #9ca3af;
-        --border: #334155;
-        --sidebar-bg: #111827;
-        --active-bg: #1e3a8a;
-        --hover-bg: #1f2937;
-        --code-bg: #1e293b;
-      }
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      color: var(--fg);
-      background: var(--bg);
-    }
-
-    .layout {
-      display: flex;
-      min-height: 100vh;
-    }
-
-    .sidebar {
-      width: 280px;
-      flex: 0 0 280px;
-      border-right: 1px solid var(--border);
-      background: var(--sidebar-bg);
-      padding: 1rem;
-      overflow-y: auto;
-    }
-
-    .sidebar h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
-    }
-
-    .sidebar ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .sidebar li {
-      margin: 0.25rem 0;
-    }
-
-    .sidebar a {
-      display: block;
-      padding: 0.5rem 0.75rem;
-      color: var(--fg);
-      text-decoration: none;
-      border-radius: 6px;
-    }
-
-    .sidebar a:hover {
-      background: var(--hover-bg);
-    }
-
-    .sidebar a.active {
-      background: var(--active-bg);
-      font-weight: bold;
-    }
-
-    .doc-top-nav {
-      margin-bottom: 1.5rem;
-    }
-    
-    .sidebar-logo {
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-    
-    .sidebar-logo img {
-      display: inline-block;
-    }
-    .content {
-      flex: 1;
-      min-width: 0;
-      padding: 2rem;
-      overflow-x: auto;
-    }
-
-    .content img {
-      display: block;
-      margin: 0 auto;
-      max-width: 80%;
-      height: auto;
-      cursor: zoom-in;
-    }
-
-    .lightbox {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.85);
-      z-index: 999;
-      padding: 1.5rem;
-      cursor: zoom-out;
-    }
-
-    .lightbox.open {
-      display: flex;
-    }
-
-    .lightbox img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
-      border-radius: 4px;
-      cursor: auto;
-    }
-
-    .lightbox .close {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      border: none;
-      background: rgba(255, 255, 255, 0.16);
-      color: #fff;
-      font-size: 1.5rem;
-      width: 2.25rem;
-      height: 2.25rem;
-      border-radius: 50%;
-      cursor: pointer;
-      line-height: 1;
-    }
-
-    .content pre {
-      overflow-x: auto;
-      padding: 0.75rem;
-      background: var(--code-bg);
-      border-radius: 6px;
-    }
-
-    .content code {
-      font-family: Consolas, Monaco, monospace;
-    }
-
-    .content table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    .content th, .content td {
-      border: 1px solid var(--border);
-      padding: 0.5rem;
-      text-align: left;
-    }
-
-    .content blockquote {
-      position: relative;
-      margin: 0;
-      padding: 1.5rem 1.25rem 1rem 1.25rem; /* extra top padding for Note text */
-      color: #24505a;
-    
-      background: #e6fbff;
-      border: 1px solid #7fc7d1;
-      border-radius: 8px;
-    }
-    
-    .content blockquote::before {
-      content: "Note";
-      position: absolute;
-      top: 1rem;
-      left: 1.1rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #2b6f7a;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .footer-muted {
-      margin-top: 2rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    @media (max-width: 900px) {
-      .layout {
-        flex-direction: column;
-      }
-
-      .sidebar {
-        width: 100%;
-        flex: none;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-      }
-    }
+{{{inlineCss}}}
   </style>
+  {{/inlineCss}}
 </head>
 <body>
   <div class="layout">
@@ -405,10 +234,12 @@ void main(List<String> arguments) {
       <div class="doc-top-nav">
           <a href="/">&larr; BookmarkSquirrel.com</a>
       </div>
+      {{#sidebarLogo}}
       <div class="sidebar-logo">
-        <img src="/documentation/bookmarksquirrel-logo.webp" width="80%" alt="Bookmark Squirrel logo">
+        <img src="{{src}}" alt="{{alt}}">
       </div>
-      <h1>Documentation</h1>
+      {{/sidebarLogo}}
+      <h1>{{sidebarTitle}}</h1>
       <ul>
         {{#sidebarItems}}
         <li>
@@ -484,9 +315,11 @@ void main(List<String> arguments) {
     lenient: true,
   );
 
-  final footerRelativePath = '999-footer.md';
-  final footerSourceFile = File(_join(inputDir.path, footerRelativePath));
-  final hasFooter = footerSourceFile.existsSync();
+  final footerRelativePath = config.footer;
+  final footerSourceFile = footerRelativePath == null
+      ? null
+      : File(_join(inputDir.path, footerRelativePath));
+  final hasFooter = footerSourceFile?.existsSync() ?? false;
 
   for (final page in pages) {
     final sourceFile = File(_join(inputDir.path, page.markdownRelativePath));
@@ -524,7 +357,7 @@ void main(List<String> arguments) {
     );
 
     String? renderedFooter;
-    if (hasFooter) {
+    if (hasFooter && footerSourceFile != null && footerRelativePath != null) {
       final footerMarkdownText = footerSourceFile.readAsStringSync();
       final preprocessedFooter = _replaceHtmlImageSources(
         markdownText: _replaceWikiLinks(
@@ -582,12 +415,24 @@ void main(List<String> arguments) {
       };
     }).toList();
 
+    final sidebarLogo = _buildSidebarLogo(
+      config: config,
+      currentOutputDir: currentOutputDir,
+      outputDirPath: outputDir.path,
+      inputDirPath: inputDir.path,
+      assetLookup: assetLookup,
+      currentMarkdownRelativePath: page.markdownRelativePath,
+    );
+
     final html = template.renderString({
-      'pageTitle': page.title,
+      'pageTitle': stripHtml(page.title),
       'content': renderedMarkdown,
       'sidebarItems': sidebarItems,
       'footerContent': renderedFooter,
       'faviconLinks': faviconLinks,
+      'inlineCss': inlineCss,
+      'sidebarTitle': config.sidebarTitle,
+      'sidebarLogo': sidebarLogo,
     });
 
     final outFile = File(pageHtmlFullPath);
@@ -596,6 +441,82 @@ void main(List<String> arguments) {
 
     stdout.writeln('Wrote ${page.htmlRelativePath}');
   }
+}
+
+void _createConfigFile(String directoryPath) {
+  final directory = Directory(directoryPath);
+  directory.createSync(recursive: true);
+
+  final configFile = File(_join(directory.path, 'markdown2html.json'));
+  const defaultConfig = {
+    'logo': 'logo.webp',
+    'logoAlt': 'Site logo',
+    'css': 'site.css',
+    'favicons': true,
+    'sidebarTitle': 'Your site',
+    'footer': '999-footer.md',
+  };
+
+  const encoder = JsonEncoder.withIndent('  ');
+  configFile.writeAsStringSync('${encoder.convert(defaultConfig)}\n');
+  stdout.writeln('Wrote ${configFile.path}');
+}
+
+Markdown2HtmlConfig _loadConfig(Directory inputDir) {
+  final configFile = File(_join(inputDir.path, 'markdown2html.json'));
+  if (!configFile.existsSync()) {
+    return const Markdown2HtmlConfig();
+  }
+
+  final decoded = jsonDecode(configFile.readAsStringSync());
+  if (decoded is! Map<String, dynamic>) {
+    stderr.writeln('Invalid config file: markdown2html.json must contain a JSON object.');
+    exitCode = 65;
+    throw const FormatException('Invalid markdown2html.json');
+  }
+
+  return Markdown2HtmlConfig.fromJson(decoded);
+}
+
+Map<String, String>? _buildSidebarLogo({
+  required Markdown2HtmlConfig config,
+  required String currentOutputDir,
+  required String outputDirPath,
+  required String inputDirPath,
+  required Map<String, List<String>> assetLookup,
+  required String currentMarkdownRelativePath,
+}) {
+  final logoTarget = config.logo;
+  if (logoTarget == null) {
+    return null;
+  }
+
+  final resolvedAssetPath = _resolveAssetTarget(
+    logoTarget,
+    currentMarkdownRelativePath,
+    assetLookup,
+  );
+
+  if (resolvedAssetPath == null) {
+    stderr.writeln('Warning: configured logo could not be resolved: $logoTarget');
+    return null;
+  }
+
+  final sourceAssetPath = _join(inputDirPath, resolvedAssetPath);
+  final copiedAssetPath = _join(outputDirPath, resolvedAssetPath);
+
+  File(copiedAssetPath).parent.createSync(recursive: true);
+  File(sourceAssetPath).copySync(copiedAssetPath);
+
+  return {
+    'src': _encodeUrlPath(
+      _relativePath(
+        fromDirectory: currentOutputDir,
+        toFile: copiedAssetPath,
+      ),
+    ),
+    'alt': config.logoAlt ?? 'Site logo',
+  };
 }
 
 void _cleanDirectory(Directory directory) {
@@ -683,7 +604,7 @@ String _replaceWikiLinks({
 }) {
   return markdownText.replaceAllMapped(
     RegExp(r'(!)?\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]'),
-        (match) {
+    (match) {
       final isImageWikiLink = match.group(1) == '!';
       final rawTarget = match.group(2)?.trim();
       final rawLabel = match.group(3)?.trim();
@@ -771,7 +692,7 @@ String _replaceHtmlImageSources({
   required String inputDirPath,
 }) {
   final imageTagPattern = RegExp(
-    r"""<img\b[^>]*\bsrc\s*=\s*(?:\"([^\"]+)\"|'([^']+)'|([^\s>]+))[^>]*>""",
+    r'''<img\b[^>]*\bsrc\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))[^>]*>''',
     caseSensitive: false,
   );
 
@@ -853,8 +774,6 @@ String _escapeMarkdownLinkText(String text) {
   return text.replaceAll('[', r'\[').replaceAll(']', r'\]');
 }
 
-
-
 String _basenameWithoutExtension(String path) {
   final basename = path.split('/').last;
   return basename.replaceFirst(RegExp(r'\.[^.]+$'), '');
@@ -890,10 +809,10 @@ String? _resolveAssetTarget(
 }
 
 String? _resolveWikiTarget(
-    String rawTarget,
-    String currentMarkdownRelativePath,
-    Map<String, List<String>> wikiLookup,
-    ) {
+  String rawTarget,
+  String currentMarkdownRelativePath,
+  Map<String, List<String>> wikiLookup,
+) {
   final normalizedTarget = rawTarget.replaceAll('\\', '/').trim();
   final withMd = normalizedTarget.toLowerCase().endsWith('.md')
       ? normalizedTarget
@@ -1004,7 +923,7 @@ String _extractTitle(File markdownFile) {
       ? markdownFile.uri.pathSegments.last
       : markdownFile.path;
   final withoutExtension =
-  name.replaceFirst(RegExp(r'\.md$', caseSensitive: false), '');
+      name.replaceFirst(RegExp(r'\.md$', caseSensitive: false), '');
 
   return withoutExtension.replaceAll(RegExp(r'[_\-]+'), ' ').trim();
 }
@@ -1113,8 +1032,83 @@ class FaviconAsset {
   final String path;
   final String sizes;
 
-  FaviconAsset({
+  const FaviconAsset({
     required this.path,
     required this.sizes,
   });
+}
+
+class Markdown2HtmlConfig {
+  final String? logo;
+  final String? logoAlt;
+  final String? css;
+  final bool favicons;
+  final String sidebarTitle;
+  final String? footer;
+
+  const Markdown2HtmlConfig({
+    this.logo = 'logo.webp',
+    this.logoAlt = 'Site logo',
+    this.css = 'site.css',
+    this.favicons = true,
+    this.sidebarTitle = 'Your site',
+    this.footer = '999-footer.md',
+  });
+
+  factory Markdown2HtmlConfig.fromJson(Map<String, dynamic> json) {
+    return Markdown2HtmlConfig(
+      logo: _readNullableString(json, 'logo', fallback: 'logo.webp'),
+      logoAlt: _readNullableString(json, 'logoAlt', fallback: 'Site logo'),
+      css: _readNullableString(json, 'css', fallback: 'site.css'),
+      favicons: _readBool(json, 'favicons', fallback: true),
+      sidebarTitle: _readNullableString(json, 'sidebarTitle', fallback: 'Your site') ?? 'Your site',
+      footer: _readNullableString(json, 'footer', fallback: '999-footer.md'),
+    );
+  }
+}
+
+String? _readNullableString(
+  Map<String, dynamic> json,
+  String key, {
+  String? fallback,
+}) {
+  if (!json.containsKey(key)) {
+    return fallback;
+  }
+
+  final value = json[key];
+  if (value == null) {
+    return null;
+  }
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  throw FormatException('Config value "$key" must be a string or null.');
+}
+
+bool _readBool(
+  Map<String, dynamic> json,
+  String key, {
+  required bool fallback,
+}) {
+  if (!json.containsKey(key)) {
+    return fallback;
+  }
+
+  final value = json[key];
+  if (value is bool) {
+    return value;
+  }
+
+  throw FormatException('Config value "$key" must be a boolean.');
+}
+
+String stripHtml(String input) {
+  final document = html_parser.parse(input);
+  return document.body?.text
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim() ??
+      '';
 }
