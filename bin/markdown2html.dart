@@ -96,7 +96,11 @@ void main(List<String> arguments) {
   );
   final faviconAssets = _findFaviconAssets(allFilesByRelativePath.keys);
 
-  final orderedManifest = _parseIndexOrderFromWikiLinks(indexFile, wikiLookup);
+  final indexSections = _splitIndexContents(indexFile.readAsStringSync());
+  final orderedManifest = _parseIndexOrderFromWikiLinks(
+    indexSections.sidebarMarkdown ?? indexSections.visibleMarkdown,
+    wikiLookup,
+  );
 
   final pageOrder = <String>[];
   final seen = <String>{};
@@ -130,7 +134,10 @@ void main(List<String> arguments) {
     }
 
     final markdownText = sourceFile.readAsStringSync();
-    final wikiTargets = _extractWikiTargets(markdownText);
+    final wikiSource = currentMarkdownPath.toLowerCase() == '000-index.md'
+        ? (indexSections.sidebarMarkdown ?? indexSections.visibleMarkdown)
+        : markdownText;
+    final wikiTargets = _extractWikiTargets(wikiSource);
 
     for (final rawTarget in wikiTargets) {
       final resolved = _resolveWikiTarget(
@@ -399,10 +406,9 @@ void main(List<String> arguments) {
           <a href="/">&larr; BookmarkSquirrel.com</a>
       </div>
       <div class="sidebar-logo">
-        <img src="/documentation/bookmarksquirrel-logo.webp" width="128" alt="Bookmark Squirrel logo">
+        <img src="/documentation/bookmarksquirrel-logo.webp" width="80%" alt="Bookmark Squirrel logo">
       </div>
       <h1>Documentation</h1>
-      <h2>Contents</h2>
       <ul>
         {{#sidebarItems}}
         <li>
@@ -484,7 +490,10 @@ void main(List<String> arguments) {
 
   for (final page in pages) {
     final sourceFile = File(_join(inputDir.path, page.markdownRelativePath));
-    final markdownText = sourceFile.readAsStringSync();
+    final rawMarkdownText = sourceFile.readAsStringSync();
+    final markdownText = page.isIndex
+        ? indexSections.visibleMarkdown
+        : rawMarkdownText;
 
     final pageHtmlFullPath = _join(outputDir.path, page.htmlRelativePath);
     final currentOutputDir = File(pageHtmlFullPath).parent.path;
@@ -607,11 +616,10 @@ ${parser.usage}
 }
 
 List<String> _parseIndexOrderFromWikiLinks(
-    File indexFile,
-    Map<String, List<String>> wikiLookup,
-    ) {
-  final content = indexFile.readAsStringSync();
-  final rawTargets = _extractWikiTargets(content);
+  String markdownText,
+  Map<String, List<String>> wikiLookup,
+) {
+  final rawTargets = _extractWikiTargets(markdownText);
 
   final ordered = <String>[];
   final seen = <String>{};
@@ -640,6 +648,27 @@ List<String> _extractWikiTargets(String markdownText) {
       if (match.start == 0 || markdownText[match.start - 1] != '!')
         if ((match.group(1) ?? '').trim().isNotEmpty) (match.group(1) ?? '').trim(),
   ];
+}
+
+IndexSections _splitIndexContents(String markdownText) {
+  final lines = markdownText.split('\n');
+  final contentsHeading = RegExp(r'^\s*#\s+contents\s*$', caseSensitive: false);
+
+  for (var i = 0; i < lines.length; i++) {
+    if (!contentsHeading.hasMatch(lines[i])) {
+      continue;
+    }
+
+    final visibleMarkdown = lines.take(i).join('\n').trimRight();
+    final sidebarMarkdown = lines.skip(i + 1).join('\n').trim();
+
+    return IndexSections(
+      visibleMarkdown: visibleMarkdown,
+      sidebarMarkdown: sidebarMarkdown.isEmpty ? null : sidebarMarkdown,
+    );
+  }
+
+  return IndexSections(visibleMarkdown: markdownText);
 }
 
 String _replaceWikiLinks({
@@ -1030,6 +1059,16 @@ String _relativePath({
 List<String> _splitPath(String path) {
   final normalized = path.replaceAll('\\', '/');
   return normalized.split('/').where((part) => part.isNotEmpty).toList();
+}
+
+class IndexSections {
+  const IndexSections({
+    required this.visibleMarkdown,
+    this.sidebarMarkdown,
+  });
+
+  final String visibleMarkdown;
+  final String? sidebarMarkdown;
 }
 
 class PageInfo {
