@@ -212,6 +212,30 @@ void main(List<String> arguments) {
     for (final p in pages) p.markdownRelativePath: p,
   };
 
+  final sidebarPageOrder = <String>[];
+  final seenSidebarPages = <String>{};
+
+  void addSidebarPage(String path) {
+    final normalized = _normalizeRelativePath(path);
+    if (seenSidebarPages.add(normalized)) {
+      sidebarPageOrder.add(normalized);
+    }
+  }
+
+  addSidebarPage('000-index.md');
+  for (final path in orderedManifest) {
+    if (path.toLowerCase() == '000-index.md') {
+      continue;
+    }
+    addSidebarPage(path);
+  }
+
+  final sidebarPages = <PageInfo>[
+    for (final markdownPath in sidebarPageOrder)
+      if (pageByMarkdownPath.containsKey(markdownPath))
+        pageByMarkdownPath[markdownPath]!,
+  ];
+
   const templateSource = '''
 <!DOCTYPE html>
 <html lang="en">
@@ -385,7 +409,7 @@ void main(List<String> arguments) {
       );
     }
 
-    final sidebarItems = pages.map((p) {
+    final sidebarItems = sidebarPages.map((p) {
       final targetHtmlFullPath = _join(outputDir.path, p.htmlRelativePath);
       final href = _relativePath(
         fromDirectory: currentOutputDir,

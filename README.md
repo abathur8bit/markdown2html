@@ -1,3 +1,4 @@
+# Markdown 2 HTML
 Converts a markdown directory into a website with static pages. 
 
 Configuration file controls a few things for the output. 
