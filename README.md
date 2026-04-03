@@ -38,6 +38,17 @@ are, but are expected to be png images with a similar nameing format.
   <link rel="icon" href="favicon-48x48.png" sizes="48x48" type="image/png">
 ```
 
+# note colors
+light
+--note-bg: #CFEAF7;
+--note-fg: #16384D;
+--note-border: #6BAFCC;
+dark
+--note-bg: #143B52;
+--note-fg: #E6F7FF;
+--note-border: #2D6F91;
+
+
 # Block quotes
 In the `site.css` is a `blockquote` tag to handle markdown block quotes. 
 Two examples of block quotes. One is just a nice rounded box to highlight 

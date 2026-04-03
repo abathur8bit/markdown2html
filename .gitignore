@@ -9,4 +9,3 @@
 /.dart_tool/
 *.exe
 version-build.json
-lib/version.dart
