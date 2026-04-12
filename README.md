@@ -55,6 +55,20 @@ In the `site.css` is a `blockquote` tag to handle markdown block quotes.
 Two examples of block quotes. One is just a nice rounded box to highlight 
 text:
 
+## With color on edge
+```html
+.content blockquote {
+    position: relative;
+    margin: 0;
+    padding: 0.9rem 1.25rem 0.9rem 1rem;
+    color: var(--note-fg);
+    background: var(--note-bg);
+    border: 1px solid var(--note-border);
+    border-left: 5px solid var(--note-accent);
+    border-radius: 8px;
+}
+```
+
 ## Plain
 ```html
 .content blockquote {

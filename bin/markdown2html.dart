@@ -212,6 +212,15 @@ void main(List<String> arguments) {
     for (final p in pages) p.markdownRelativePath: p,
   };
 
+  final featuredCards = _parseFeaturedCards(
+    indexSections.featuredMarkdown,
+    wikiLookup,
+    outputDir.path,
+    pageByMarkdownPath,
+    assetLookup,
+    inputDir.path,
+  );
+
   final sidebarPageOrder = <String>[];
   final seenSidebarPages = <String>{};
 
@@ -276,6 +285,16 @@ void main(List<String> arguments) {
     </aside>
     <main class="content">
       {{{content}}}
+      {{#hasFeaturedCards}}
+      <section class="featured-cards" aria-label="Featured pages">
+        {{#featuredCards}}
+        <a class="featured-card" href="{{href}}">
+          <div class="featured-card-title">{{title}}</div>
+          <div class="featured-card-summary">{{{summaryHtml}}}</div>
+        </a>
+        {{/featuredCards}}
+      </section>
+      {{/hasFeaturedCards}}
       {{#footerContent}}
       <footer class="footer-muted">
         {{{footerContent}}}
@@ -450,9 +469,13 @@ void main(List<String> arguments) {
       currentMarkdownRelativePath: page.markdownRelativePath,
     );
 
+    final pageFeaturedCards = page.isIndex ? featuredCards : const <Map<String, Object>>[];
+
     final html = template.renderString({
       'pageTitle': stripHtml(page.title),
       'content': renderedMarkdown,
+      'featuredCards': pageFeaturedCards,
+      'hasFeaturedCards': pageFeaturedCards.isNotEmpty,
       'sidebarItems': sidebarItems,
       'footerContent': renderedFooter,
       'faviconLinks': faviconLinks,
@@ -607,23 +630,133 @@ List<String> _extractWikiTargets(String markdownText) {
 
 IndexSections _splitIndexContents(String markdownText) {
   final lines = markdownText.split('\n');
+  final featuredHeading = RegExp(r'^\s*#\s+featured\s*$', caseSensitive: false);
   final contentsHeading = RegExp(r'^\s*#\s+contents\s*$', caseSensitive: false);
+  int? featuredStart;
+  int? contentsStart;
 
   for (var i = 0; i < lines.length; i++) {
-    if (!contentsHeading.hasMatch(lines[i])) {
+    if (featuredStart == null && featuredHeading.hasMatch(lines[i])) {
+      featuredStart = i;
+    }
+    if (contentsStart == null && contentsHeading.hasMatch(lines[i])) {
+      contentsStart = i;
+    }
+  }
+
+  final specialSectionStarts = [if (featuredStart != null) featuredStart, if (contentsStart != null) contentsStart]
+    ..sort();
+
+  final visibleMarkdown = specialSectionStarts.isEmpty
+      ? markdownText
+      : lines.take(specialSectionStarts.first).join('\n').trimRight();
+
+  String? featuredMarkdown;
+  if (featuredStart != null) {
+    final featuredEnd = [
+      if (contentsStart != null && contentsStart > featuredStart) contentsStart,
+      lines.length,
+    ].reduce((a, b) => a < b ? a : b);
+    final section = lines.skip(featuredStart + 1).take(featuredEnd - featuredStart - 1).join('\n').trim();
+    featuredMarkdown = section.isEmpty ? null : section;
+  }
+
+  String? sidebarMarkdown;
+  if (contentsStart != null) {
+    final section = lines.skip(contentsStart + 1).join('\n').trim();
+    sidebarMarkdown = section.isEmpty ? null : section;
+  }
+
+  return IndexSections(
+    visibleMarkdown: visibleMarkdown,
+    featuredMarkdown: featuredMarkdown,
+    sidebarMarkdown: sidebarMarkdown,
+  );
+}
+
+List<Map<String, Object>> _parseFeaturedCards(
+  String? markdownText,
+  Map<String, List<String>> wikiLookup,
+  String outputDirPath,
+  Map<String, PageInfo> pageByMarkdownPath,
+  Map<String, List<String>> assetLookup,
+  String inputDirPath,
+) {
+  if (markdownText == null || markdownText.trim().isEmpty) {
+    return const [];
+  }
+
+  final cards = <Map<String, Object>>[];
+  final lines = markdownText.split('\n');
+  final itemPattern = RegExp(r'^\s*-\s*\[\[([^\[\]]+)\]\]\s*\|\s*([^|]+?)\s*\|\s*(.+?)\s*$');
+
+  for (final line in lines) {
+    final match = itemPattern.firstMatch(line);
+    if (match == null) {
       continue;
     }
 
-    final visibleMarkdown = lines.take(i).join('\n').trimRight();
-    final sidebarMarkdown = lines.skip(i + 1).join('\n').trim();
+    final rawTarget = (match.group(1) ?? '').trim();
+    final title = (match.group(2) ?? '').trim();
+    final summary = (match.group(3) ?? '').trim();
+    if (rawTarget.isEmpty || title.isEmpty || summary.isEmpty) {
+      continue;
+    }
 
-    return IndexSections(
-      visibleMarkdown: visibleMarkdown,
-      sidebarMarkdown: sidebarMarkdown.isEmpty ? null : sidebarMarkdown,
+    final resolvedMarkdownPath = _resolveWikiTarget(
+      rawTarget,
+      '000-index.md',
+      wikiLookup,
+    );
+
+    if (resolvedMarkdownPath == null) {
+      stderr.writeln(
+        'Warning: could not resolve featured card target "[[$rawTarget]]" in 000-index.md',
+      );
+      continue;
+    }
+
+    final targetHtmlFullPath = _join(
+      outputDirPath,
+      resolvedMarkdownPath.toLowerCase() == '000-index.md'
+          ? 'index.html'
+          : _markdownPathToHtml(resolvedMarkdownPath),
+    );
+
+    cards.add(
+      FeaturedCardInfo(
+        href: _encodeUrlPath(
+          _relativePath(
+            fromDirectory: outputDirPath,
+            toFile: targetHtmlFullPath,
+          ),
+        ),
+        title: title,
+        summaryHtml: md.markdownToHtml(
+          _replaceHtmlImageSources(
+            markdownText: _replaceWikiLinks(
+              markdownText: summary,
+              currentMarkdownRelativePath: '000-index.md',
+              currentOutputDir: outputDirPath,
+              outputDirPath: outputDirPath,
+              pageByMarkdownPath: pageByMarkdownPath,
+              wikiLookup: wikiLookup,
+              assetLookup: assetLookup,
+              inputDirPath: inputDirPath,
+            ),
+            currentMarkdownRelativePath: '000-index.md',
+            currentOutputDir: outputDirPath,
+            outputDirPath: outputDirPath,
+            assetLookup: assetLookup,
+            inputDirPath: inputDirPath,
+          ),
+          extensionSet: md.ExtensionSet.gitHubWeb,
+        ),
+      ).toTemplateData(),
     );
   }
 
-  return IndexSections(visibleMarkdown: markdownText);
+  return cards;
 }
 
 String _replaceWikiLinks({
@@ -1017,11 +1150,31 @@ List<String> _splitPath(String path) {
 class IndexSections {
   const IndexSections({
     required this.visibleMarkdown,
+    this.featuredMarkdown,
     this.sidebarMarkdown,
   });
 
   final String visibleMarkdown;
+  final String? featuredMarkdown;
   final String? sidebarMarkdown;
+}
+
+class FeaturedCardInfo {
+  const FeaturedCardInfo({
+    required this.href,
+    required this.title,
+    required this.summaryHtml,
+  });
+
+  final String href;
+  final String title;
+  final String summaryHtml;
+
+  Map<String, Object> toTemplateData() => {
+        'href': href,
+        'title': title,
+        'summaryHtml': summaryHtml,
+      };
 }
 
 class PageInfo {
