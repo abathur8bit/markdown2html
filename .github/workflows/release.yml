@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }} executable
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: Linux
+            target: linux-x64
+            binary_name: markdown2html
+          - os: macos-latest
+            label: macOS
+            target: macos-x64
+            binary_name: markdown2html
+          - os: windows-latest
+            label: Windows
+            target: windows-x64
+            binary_name: markdown2html.exe
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Compile executable
+        run: dart compile exe bin/markdown2html.dart -o dist/${{ matrix.binary_name }}
+
+      - name: Package release asset (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd dist
+          zip ../markdown2html-${{ matrix.target }}.zip ${{ matrix.binary_name }}
+
+      - name: Package release asset (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist\${{ matrix.binary_name }} -DestinationPath markdown2html-${{ matrix.target }}.zip
+
+      - name: Upload release asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: markdown2html-${{ matrix.target }}.zip
+
+  release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download packaged assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release-assets
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: release-assets/*.zip
+          body_path: CHANGELOG.md

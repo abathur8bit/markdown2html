@@ -6,7 +6,9 @@
       "type": {
         "type": "version",
         "command": "versionutil",
-        "params": []
+        "params": [
+          "--strict","--no-build"
+        ]
       }
     },
     {
@@ -15,7 +17,7 @@
         "type": "version",
         "command": "versionutil",
         "params": [
-          "-s"
+          "-s","--strict","--no-build"
         ]
       }
     },
