@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
+      - name: Create dist directory
+        run: mkdir dist
+
       - name: Compile executable
         run: dart compile exe bin/markdown2html.dart -o dist/${{ matrix.binary_name }}
 
