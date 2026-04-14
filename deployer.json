@@ -7,12 +7,31 @@
         "type": "version",
         "command": "versionutil",
         "params": [
+        ]
+      }
+    },
+    {
+      "name": "inc-version-strict",
+      "type": {
+        "type": "version",
+        "command": "versionutil",
+        "params": [
           "--strict","--no-build"
         ]
       }
     },
     {
       "name": "get-version",
+      "type": {
+        "type": "version",
+        "command": "versionutil",
+        "params": [
+          "-s"
+        ]
+      }
+    },
+     {
+      "name": "get-version-strict",
       "type": {
         "type": "version",
         "command": "versionutil",

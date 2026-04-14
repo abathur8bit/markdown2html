@@ -1,17 +1,17 @@
 # Markdown 2 HTML
-Converts a markdown directory into a website with static pages. 
+Converts a markdown directory into a website with static HTML pages. Great for a simple website, or for documentation for an application.
 
 Configuration file controls a few things for the output. 
 
-| Config | Notes | Example |
-|--|--|
-| `logo` | The logo file that will be shown at the top of the sidebar. | `logo.webp` |
-| `logoAlt` | the alt text for readers | `Site Logo` |
-| `css` | The css file to be included in all pages. | `site.css` |
-| `favicons` | Include or not any favicon* files found. | `true` |
-| `sitebarTitle` | The text that will be shown bwteen the top of all site links and under the logo. `null` to not include one. | `Your site name` |
-| `footer` | If not `null` include the markdown in the specified markdown file.  | `999-footer.md` |
-| `top-nav` | If not `null` there will be a link above the logo. For a documentation site, this might point back to the main site. | `{"url":"/","title":"Top Link"}` |
+| Config         | Notes                                                                                                                | Example                          |
+| -------------- |----------------------------------------------------------------------------------------------------------------------| -------------------------------- |
+| `logo`         | The logo file that will be shown at the top of the sidebar.                                                          | `logo.webp`                      |
+| `logoAlt`      | the alt text for readers                                                                                             | `Site Logo`                      |
+| `css`          | The css file to be included in all pages. Supports light and dark modes.                                             | `site.css`                       |
+| `favicons`     | Include or not, any favicon* files found.                                                                            | `true`                           |
+| `sitebarTitle` | The text that will be shown bwteen the top of all site links and under the logo. `null` to not include one.          | `Your site name`                 |
+| `footer`       | If not `null` include the markdown in the specified markdown file.                                                   | `999-footer.md`                  |
+| `top-nav`      | If not `null` there will be a link above the logo. For a documentation site, this might point back to the main site. | `{"url":"/","title":"Top Link"}` |
 
 ```json
 {
@@ -30,7 +30,7 @@ Configuration file controls a few things for the output.
 ```
 
 # Fav Icons
-`favicons` when true will include the following in the head tag. The filenames are whatever youor favicons
+When `favicons` is **true**, will include the following in the head tag. The filenames are whatever youor favicons
 are, but are expected to be png images with a similar nameing format.
 
 ```html
@@ -38,17 +38,6 @@ are, but are expected to be png images with a similar nameing format.
   <link rel="icon" href="favicon-32x32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="favicon-48x48.png" sizes="48x48" type="image/png">
 ```
-
-# note colors
-light
---note-bg: #CFEAF7;
---note-fg: #16384D;
---note-border: #6BAFCC;
-dark
---note-bg: #143B52;
---note-fg: #E6F7FF;
---note-border: #2D6F91;
-
 
 # Block quotes
 In the `site.css` is a `blockquote` tag to handle markdown block quotes. 
