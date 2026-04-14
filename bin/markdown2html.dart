@@ -7,6 +7,13 @@ import 'package:markdown2html/version.dart';
 import 'package:mustache_template/mustache_template.dart';
 import 'package:html/parser.dart' as html_parser;
 
+bool get isCompiledExecutable {
+  final exe = Platform.resolvedExecutable.toLowerCase();
+  return !exe.endsWith('dart') && !exe.endsWith('dart.exe');
+}
+bool get isRunningFromDartRun => !isCompiledExecutable;
+String executable = 'markdown2html';  //default to an executable
+
 void main(List<String> arguments) {
   final parser = ArgParser()
     ..addOption(
@@ -583,14 +590,20 @@ void _cleanDirectory(Directory directory) {
 }
 
 void _printUsage(ArgParser parser) {
+  if(isRunningFromDartRun) {
+    executable = "dart run bin/markdown2html.dart"; //running from dart, not an executable
+  }
+  stdout.writeln("Converts a markdown directory into a website with static HTML pages.");
   stdout.writeln("Version: $appVersion");
-  stdout.writeln('''
-Usage:
-  dart run bin/mdsite.dart --input <inputDir> --output <outputDir>
-
-Options:
-${parser.usage}
-''');
+  stdout.writeln("");
+  stdout.writeln("Homepage: https://weatheredhiker.com/pages/markdown2html.html");
+  stdout.writeln("Source  : https://github.com/abathur8bit/markdown2html");
+  stdout.writeln("Issues  : https://github.com/abathur8bit/markdown2html/issues");
+  stdout.writeln("");
+  stdout.writeln("Usage: $executable -i <inputDir> -o <outputDir>");
+  stdout.writeln("");
+  stdout.writeln(parser.usage);
+  stdout.writeln("");
 }
 
 List<String> _parseIndexOrderFromWikiLinks(
