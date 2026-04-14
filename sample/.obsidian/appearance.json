@@ -1,0 +1,12 @@
+{
+  "baseFontSize": 17,
+  "accentColor": "",
+  "textFontFamily": "Consolas,Andale Mono",
+  "monospaceFontFamily": "Consolas,Andale Mono",
+  "interfaceFontFamily": "Consolas",
+  "showViewHeader": false,
+  "theme": "obsidian",
+  "cssTheme": "Atom",
+  "nativeMenus": true,
+  "baseFontSizeAction": true
+}

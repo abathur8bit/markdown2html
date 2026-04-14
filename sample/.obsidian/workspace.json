@@ -1,0 +1,236 @@
+{
+  "main": {
+    "id": "db0765eee94ddf9f",
+    "type": "split",
+    "children": [
+      {
+        "id": "aa5fb2da1e836d09",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bee61c35786390b9",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "000-index.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "000-index"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "b2e106d0aaa1b4af",
+    "type": "split",
+    "children": [
+      {
+        "id": "5b70c21a81a89a7a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c2f9fa3ced837d31",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "custom",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "48179483c6eba08b",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "130090a1ebc9a6cd",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "c107f230f3408d8d",
+    "type": "split",
+    "children": [
+      {
+        "id": "43b766927089f8d2",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8d6906febcf4b219",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "000-index.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for 000-index"
+            }
+          },
+          {
+            "id": "1b4dcb84bbbb55ba",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "000-index.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from 000-index"
+            }
+          },
+          {
+            "id": "8ea7b02c0590825c",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "682b5c63e7175d62",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-ghost",
+              "title": "all-properties"
+            }
+          },
+          {
+            "id": "f2c61ada0faef558",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "000-index.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of 000-index"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "table-editor-obsidian:Advanced Tables Toolbar": false
+    }
+  },
+  "active": "bee61c35786390b9",
+  "lastOpenFiles": [
+    "pages/page1.md",
+    "000-index.md",
+    "pages/markdown.md",
+    "999-footer.md",
+    "pages/page2.md",
+    "pages/faviconer.md",
+    "desktop.ini",
+    "pages/coco/color-computer.md",
+    "pages/coco/pmode1-page1.md",
+    "pages/coco/pmode1-page0.md",
+    "pages/vpayez/vpayez.md",
+    "pages/vpayez",
+    "pages/coco",
+    "pages/gms/gms.md",
+    "pages/gms/store_results.png",
+    "pages/utils/utilities.md",
+    "pages/green-ant/green-ant.md",
+    "pages/gms/store_darkmode.png",
+    "pages/gms/store_tripinfo.png",
+    "pages/gms/store_menu.png",
+    "pages/gms/gms-web-icon.png",
+    "pages/gms",
+    "pages/green-ant/ga-stock-01.png",
+    "pages/green-ant/ga-orderentry-01.png",
+    "pages/green-ant/greenant-web-icon.png",
+    "pages/green-ant",
+    "pages/New folder",
+    "whlogo.png",
+    "whlogo-old.png",
+    "pages/whtail.md",
+    "README.md",
+    "markdown2html readme.md",
+    "pages/utils/colortable.md",
+    "pages/utils/time.md",
+    "invoice-BM4U-1000.md",
+    "pages/reference.md",
+    "pages/http-status-codes.md",
+    "pages/utils",
+    "pages/utils/prettycsv.md",
+    "archive/map.html",
+    "pages/whlogo-sizes.afphoto",
+    "pages/ansi-colors.md",
+    "output/pages/whtail.html",
+    "archive/13-falls/13-falls.md",
+    "archive/README maps.md",
+    "archive/privacy-policy.md"
+  ]
+}

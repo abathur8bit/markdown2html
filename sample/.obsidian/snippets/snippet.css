@@ -1,0 +1,6 @@
+body { 
+  --text-normal: red;
+	--bold-color: orange;
+	--italic-color: #AAAA00;
+	color: rgb(255,0,0);
+}

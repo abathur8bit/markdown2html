@@ -1,0 +1,22 @@
+{
+  "pdfExportSettings": {
+    "includeName": true,
+    "pageSize": "Letter",
+    "landscape": false,
+    "margin": "0",
+    "downscalePercent": 100
+  },
+  "fileSortOrder": "byCreatedTime",
+  "readableLineLength": false,
+  "useTab": false,
+  "autoPairBrackets": false,
+  "autoPairMarkdown": false,
+  "smartIndentList": false,
+  "livePreview": true,
+  "showInlineTitle": false,
+  "alwaysUpdateLinks": true,
+  "showIndentGuide": false,
+  "defaultViewMode": "source",
+  "strictLineBreaks": false,
+  "spellcheck": true
+}

@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "type": "file",
+      "title": "Obsidian",
+      "path": "Obsidian.md"
+    },
+    {
+      "type": "file",
+      "title": "touch to change file creqted date time and modified date time",
+      "path": "touch to change file created date time and modified date time.md"
+    },
+    {
+      "type": "file",
+      "title": "MCP issue",
+      "path": "virtuon/MCP issue.md"
+    }
+  ]
+}

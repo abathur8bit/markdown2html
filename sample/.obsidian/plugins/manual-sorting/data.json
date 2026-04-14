@@ -1,0 +1,31 @@
+{
+  "customOrder": {
+    "/": {
+      "children": [
+        "logo-512x512.png",
+        "000-index.md",
+        "999-footer.md",
+        "pages",
+        "favicon.ico",
+        "favicon-64x64.png",
+        "site.css",
+        "markdown2html.json",
+        "favicon-48x48.png",
+        "favicon-32x32.png",
+        "favicon-16x16.png"
+      ],
+      "sortOrder": "custom"
+    },
+    "pages": {
+      "children": [
+        "pages/markdown.md",
+        "pages/page2.md",
+        "pages/page1.md"
+      ],
+      "sortOrder": "custom"
+    }
+  },
+  "sortOrder": "custom",
+  "debugMode": false,
+  "newItemPlacement": "top"
+}

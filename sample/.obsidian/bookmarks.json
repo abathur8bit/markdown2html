@@ -1,0 +1,35 @@
+{
+  "items": [
+    {
+      "type": "file",
+      "ctime": 1736954416516,
+      "path": "color computer/00 Coco Notes.md",
+      "title": "Coco Notes"
+    },
+    {
+      "type": "group",
+      "ctime": 1736955594138,
+      "items": [
+        {
+          "type": "file",
+          "ctime": 1736955573038,
+          "path": "jobs/00 jobs index.md",
+          "title": "job search notes"
+        },
+        {
+          "type": "file",
+          "ctime": 1736954394439,
+          "path": "jobs/resume/00 Lee Patterson Resume.md",
+          "title": "Resume"
+        }
+      ],
+      "title": "jobs"
+    },
+    {
+      "type": "file",
+      "ctime": 1737012997816,
+      "path": "articles/003 Black Diamond Headlamp.md",
+      "title": "003 Black Diamond Headlamp"
+    }
+  ]
+}
