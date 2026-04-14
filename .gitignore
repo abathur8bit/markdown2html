@@ -10,4 +10,5 @@
 version-build.json
 markdown2html
 deployer.json
-sample\.obsidian
+/sample/.obsidian/
+/output/

@@ -121,7 +121,7 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 1rem;
     margin: 0 0 2rem 0;
-    margin-top: 3rem;
+    margin-top: 2rem;
 }
 
 .featured-card {
