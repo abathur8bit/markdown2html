@@ -3,7 +3,7 @@
   "logoAlt": "Site logo",
   "css": "site.css",
   "favicons": true,
-  "sidebarTitle":"Your site title",
+  "sidebarTitle":null,
   "footer": "999-footer.md",
   "top-nav":null
 }

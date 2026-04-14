@@ -11,16 +11,6 @@
       }
     },
     {
-      "name": "inc-version-strict",
-      "type": {
-        "type": "version",
-        "command": "versionutil",
-        "params": [
-          "--strict","--no-build"
-        ]
-      }
-    },
-    {
       "name": "get-version",
       "type": {
         "type": "version",
@@ -30,13 +20,23 @@
         ]
       }
     },
-     {
+    {
+      "name": "inc-version-strict",
+      "type": {
+        "type": "version",
+        "command": "versionutil",
+        "params": [
+          "--strict"
+        ]
+      }
+    },
+    {
       "name": "get-version-strict",
       "type": {
         "type": "version",
         "command": "versionutil",
         "params": [
-          "-s","--strict","--no-build"
+          "-s","--strict"
         ]
       }
     },
@@ -59,6 +59,23 @@
           "/Y","markdown2html.exe","\\util\\lee"
         ]
       }
+    },
+    {
+      "name": "tag",
+      "type": {
+        "type": "execute",
+        "command": "git",
+        "params": ["tag","-a","v{{version}}","-m","Release v{{version}}"]
+      }
+    },
+    {
+      "name": "push-tag",
+      "type": {
+        "type": "execute",
+        "command": "git",
+        "params": ["push", "-f", "origin", "v{{version}}"]
+      }
     }
+
   ]
 }

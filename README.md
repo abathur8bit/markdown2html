@@ -1,17 +1,25 @@
 # Markdown 2 HTML
-Converts a markdown directory into a website with static HTML pages. Great for a simple website, or for documentation for an application.
+Converts a markdown directory into a website with static HTML pages. 
+Great for a simple website, or for documentation for an application.
+See the `sample` folder for an example website. To compile use the following
+then open `output/index.html`.
+
+```
+dart run bin/markdown2html.dart -i sample -o output
+markdown2html -i sample -o output
+```
 
 Configuration file controls a few things for the output. 
 
-| Config         | Notes                                                                                                                | Example                          |
-| -------------- |----------------------------------------------------------------------------------------------------------------------| -------------------------------- |
-| `logo`         | The logo file that will be shown at the top of the sidebar.                                                          | `logo.webp`                      |
-| `logoAlt`      | the alt text for readers                                                                                             | `Site Logo`                      |
-| `css`          | The css file to be included in all pages. Supports light and dark modes.                                             | `site.css`                       |
-| `favicons`     | Include or not, any favicon* files found.                                                                            | `true`                           |
-| `sitebarTitle` | The text that will be shown bwteen the top of all site links and under the logo. `null` to not include one.          | `Your site name`                 |
-| `footer`       | If not `null` include the markdown in the specified markdown file.                                                   | `999-footer.md`                  |
-| `top-nav`      | If not `null` there will be a link above the logo. For a documentation site, this might point back to the main site. | `{"url":"/","title":"Top Link"}` |
+| Config         | Notes                                                                                                                | Example                                    |
+| -------------- |----------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| `logo`         | The logo file that will be shown at the top of the sidebar.                                                          | `logo.webp`                                |
+| `logoAlt`      | the alt text for readers                                                                                             | `Site Logo`                                |
+| `css`          | The css file to be included in all pages. Supports light and dark modes.                                             | `site.css`                                 |
+| `favicons`     | Include or not, any favicon* files found.                                                                            | `true`                                     |
+| `sitebarTitle` | The text that will be shown bwteen the top of all site links and under the logo. `null` to not include one.          | `null` or `Your site name`                 |
+| `footer`       | If not `null` include the markdown in the specified markdown file as the footer for each page.                       | `null` or `999-footer.md`                  |
+| `top-nav`      | If not `null` there will be a link above the logo. For a documentation site, this might point back to the main site. | `null` or `{"url":"/","title":"Top Link"}` |
 
 ```json
 {
@@ -37,14 +45,18 @@ are, but are expected to be png images with a similar nameing format.
   <link rel="icon" href="favicon-16x16.png" sizes="16x16" type="image/png">
   <link rel="icon" href="favicon-32x32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="favicon-48x48.png" sizes="48x48" type="image/png">
+  <link rel="icon" href="favicon-64x64.png" sizes="64x64" type="image/png">
 ```
 
 # Block quotes
 In the `site.css` is a `blockquote` tag to handle markdown block quotes. 
-Two examples of block quotes. One is just a nice rounded box to highlight 
-text:
+Here are a few ways to display a blockquote that you might find interesting. 
 
 ## With color on edge
+Colored rounded rectangle with color on the side.
+
+![](docs/blockquote-sidecolor.webp)
+
 ```html
 .content blockquote {
     position: relative;
@@ -58,7 +70,11 @@ text:
 }
 ```
 
-## Plain
+## Colored rounded rect
+Colored rounded rectangle:
+
+![](docs/blockquote-colored.webp)
+
 ```html
 .content blockquote {
   position: relative;
@@ -72,7 +88,10 @@ text:
 ```
 
 ## Note
-The other will add a 'NOTE' to the top of the text:
+A 'NOTE' added to the top of the text:
+
+![](docs/blockquote-note.webp)
+
 ```html
 .content blockquote {
   position: relative;
@@ -99,6 +118,8 @@ The other will add a 'NOTE' to the top of the text:
 
 ## Standard block quote
 Something you would see in Obsidian.
+
+![](docs/blockquote-standard.webp)
 
 ```html
 blockquote {
