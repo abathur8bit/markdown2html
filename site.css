@@ -50,7 +50,9 @@ body {
     background: var(--bg);
 }
 
-.mobile-toolbar {
+.mobile-toolbar,
+.mobile-menu-close,
+.mobile-menu-backdrop {
     display: none;
 }
 
@@ -279,10 +281,31 @@ body {
         font-style: normal;
     }
 
+    .bi-x::before {
+        content: "\00d7";
+        font-style: normal;
+    }
+
     .mobile-toolbar-title {
         flex: 1;
         padding: 1rem;
         font-weight: 700;
+    }
+
+    .mobile-menu-backdrop {
+        position: fixed;
+        inset: 0;
+        display: block;
+        background: rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+        z-index: 800;
+    }
+
+    body.nav-open .mobile-menu-backdrop {
+        opacity: 1;
+        pointer-events: auto;
     }
 
     .layout {
@@ -304,9 +327,20 @@ body {
         z-index: 900;
     }
 
+    .mobile-menu-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        margin-left: auto;
+        background: transparent;
+        color: var(--mobile-menu-fg);
+        padding: 0.5rem;
+        font-size: 1.75rem;
+    }
+
     body.nav-open .sidebar {
         transform: translateX(0);
-        display: block;
     }
 
     .featured-cards {

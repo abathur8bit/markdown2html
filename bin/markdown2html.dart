@@ -283,8 +283,12 @@ void main(List<String> arguments) {
     </button>
     <div class="mobile-toolbar-title">{{pageTitle}}</div>
   </header>
+  <div class="mobile-menu-backdrop" aria-hidden="true"></div>
   <div class="layout">
     <aside class="sidebar">
+      <button class="mobile-menu-close" type="button" aria-label="Close table of contents">
+        <i class="bi bi-x" aria-hidden="true"></i>
+      </button>
       {{#topNav}}
       <div class="doc-top-nav"><a href="{{url}}">{{title}}</a></div>
       {{/topNav}}
@@ -330,12 +334,30 @@ void main(List<String> arguments) {
   <script>
     (() => {
       const menuToggle = document.querySelector('.mobile-menu-toggle');
+      const menuClose = document.querySelector('.mobile-menu-close');
+      const menuBackdrop = document.querySelector('.mobile-menu-backdrop');
+      const sidebarLinks = document.querySelectorAll('.sidebar a');
+
+      const closeMenu = () => {
+        document.body.classList.remove('nav-open');
+        if (menuToggle) {
+          menuToggle.setAttribute('aria-expanded', 'false');
+        }
+      };
+
       if (menuToggle) {
         menuToggle.addEventListener('click', () => {
           const isOpen = document.body.classList.toggle('nav-open');
           menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         });
       }
+      if (menuClose) {
+        menuClose.addEventListener('click', closeMenu);
+      }
+      if (menuBackdrop) {
+        menuBackdrop.addEventListener('click', closeMenu);
+      }
+      sidebarLinks.forEach((link) => link.addEventListener('click', closeMenu));
 
       const lightbox = document.getElementById('lightbox');
       const lightboxImage = document.getElementById('lightbox-image');
@@ -373,6 +395,9 @@ void main(List<String> arguments) {
       });
 
       document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && document.body.classList.contains('nav-open')) {
+          closeMenu();
+        }
         if (event.key === 'Escape' && lightbox.classList.contains('open')) {
           closeLightbox();
         }
