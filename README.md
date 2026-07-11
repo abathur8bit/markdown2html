@@ -1,8 +1,13 @@
 # Markdown 2 HTML
-Converts a markdown directory into a website with static HTML pages. 
-Great for a simple website, or for documentation for an application.
-See the `sample` folder for an example website. To compile use the following
+Converts a Markdown directory into a website with static HTML pages.
+Great for a simple website or for application documentation. See the
+`sample` folder for an example website. To compile, use the following,
 then open `output/index.html`.
+
+On mobile, the navigation menu is collapsed into a hamburger button in
+the toolbar. The toolbar displays the site logo in the center. When no
+logo is available, it displays `sitebarTitle`; if that is also missing,
+it falls back to the page title.
 
 ```
 dart run bin/markdown2html.dart -i sample -o output
@@ -17,7 +22,7 @@ Configuration file controls a few things for the output.
 | `logoAlt`      | the alt text for readers                                                                                             | `Site Logo`                                |
 | `css`          | The css file to be included in all pages. Supports light and dark modes.                                             | `site.css`                                 |
 | `favicons`     | Include or not, any favicon* files found.                                                                            | `true`                                     |
-| `sitebarTitle` | The text that will be shown bwteen the top of all site links and under the logo. `null` to not include one.          | `null` or `Your site name`                 |
+| `sitebarTitle` | The text that will be shown bewteen the top of all site links and under the logo. `null` to not include one.         | `null` or `Your site name`                 |
 | `footer`       | If not `null` include the markdown in the specified markdown file as the footer for each page.                       | `null` or `999-footer.md`                  |
 | `top-nav`      | If not `null` there will be a link above the logo. For a documentation site, this might point back to the main site. | `null` or `{"url":"/","title":"Top Link"}` |
 
@@ -41,7 +46,7 @@ Configuration file controls a few things for the output.
 When `favicons` is **true**, will include the following in the head tag. The filenames are whatever youor favicons
 are, but are expected to be png images with a similar nameing format.
 
-```html
+```
   <link rel="icon" href="favicon-16x16.png" sizes="16x16" type="image/png">
   <link rel="icon" href="favicon-32x32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="favicon-48x48.png" sizes="48x48" type="image/png">
@@ -57,7 +62,7 @@ Colored rounded rectangle with color on the side.
 
 ![](docs/blockquote-sidecolor.webp)
 
-```html
+```
 .content blockquote {
     position: relative;
     margin: 0;
@@ -75,7 +80,7 @@ Colored rounded rectangle:
 
 ![](docs/blockquote-colored.webp)
 
-```html
+```
 .content blockquote {
   position: relative;
   margin: 0;
@@ -92,7 +97,7 @@ A 'NOTE' added to the top of the text:
 
 ![](docs/blockquote-note.webp)
 
-```html
+```
 .content blockquote {
   position: relative;
   margin: 0;
@@ -121,11 +126,21 @@ Something you would see in Obsidian.
 
 ![](docs/blockquote-standard.webp)
 
-```html
+```
 blockquote {
   margin: 1rem 0;
   padding-left: 1rem;
   border-left: 4px solid #ccc;
   color: #555;
 }
+```
+
+# Menu on Mobile
+You can change the colors of the menu BG and text with the following. It defaults to the 
+highlight color in the menu.
+
+```
+--mobile-menu-bg: var(--active-bg);
+--mobile-menu-fg: var(--fg);
+--mobile-toolbar-padding: 0.2rem;
 ```
