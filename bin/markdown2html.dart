@@ -281,7 +281,12 @@ void main(List<String> arguments) {
     <button class="mobile-menu-toggle" type="button" aria-label="Toggle table of contents" aria-expanded="false">
       <i class="bi bi-list" aria-hidden="true"></i>
     </button>
-    <div class="mobile-toolbar-title">{{pageTitle}}</div>
+    {{#sidebarLogo}}
+    <img class="mobile-toolbar-logo" src="{{src}}" alt="{{alt}}">
+    {{/sidebarLogo}}
+    {{^sidebarLogo}}
+    <div class="mobile-toolbar-title">{{mobileToolbarTitle}}</div>
+    {{/sidebarLogo}}
   </header>
   <div class="mobile-menu-backdrop" aria-hidden="true"></div>
   <div class="layout">
@@ -536,6 +541,7 @@ void main(List<String> arguments) {
       'footerContent': renderedFooter,
       'faviconLinks': faviconLinks,
       'inlineCss': inlineCss,
+      'mobileToolbarTitle': config.sidebarTitle ?? stripHtml(page.title),
       'sidebarTitle': config.sidebarTitle,
       'sidebarLogo': sidebarLogo,
       'topNav': config.topNav == null

@@ -17,6 +17,7 @@
     --button-text: #ffffff;
     --mobile-menu-bg: var(--active-bg);
     --mobile-menu-fg: var(--fg);
+    --mobile-toolbar-padding: 0.2rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -38,6 +39,7 @@
         --button-text: #ffffff;
         --mobile-menu-bg: var(--active-bg);
         --mobile-menu-fg: var(--fg);
+        --mobile-toolbar-padding: 0.5rem;
     }
 }
 
@@ -262,13 +264,18 @@ body {
 
 @media (max-width: 900px) {
     .mobile-toolbar {
+        position: relative;
         display: flex;
+        align-items: center;
+        min-height: calc(3.5rem + (var(--mobile-toolbar-padding) * 2));
+        padding: var(--mobile-toolbar-padding);
         background: var(--mobile-menu-bg);
         color: var(--mobile-menu-fg);
     }
 
     .mobile-menu-toggle {
         width: 3.5rem;
+        align-self: stretch;
         border-radius: 0;
         background: transparent;
         color: var(--mobile-menu-fg);
@@ -290,6 +297,16 @@ body {
         flex: 1;
         padding: 1rem;
         font-weight: 700;
+        text-align: left;
+    }
+
+    .mobile-toolbar-logo {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2rem;
+        height: 2rem;
+        object-fit: contain;
     }
 
     .mobile-menu-backdrop {
