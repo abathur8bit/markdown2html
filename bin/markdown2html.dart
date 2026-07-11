@@ -11,8 +11,9 @@ bool get isCompiledExecutable {
   final exe = Platform.resolvedExecutable.toLowerCase();
   return !exe.endsWith('dart') && !exe.endsWith('dart.exe');
 }
+
 bool get isRunningFromDartRun => !isCompiledExecutable;
-String executable = 'markdown2html';  //default to an executable
+String executable = 'markdown2html'; //default to an executable
 
 void main(List<String> arguments) {
   final parser = ArgParser()
@@ -29,12 +30,14 @@ void main(List<String> arguments) {
     ..addFlag(
       'clean',
       negatable: false,
-      help: 'Delete all existing files and directories in the output directory before generating.',
+      help:
+          'Delete all existing files and directories in the output directory before generating.',
     )
     ..addFlag(
       'create-config',
       negatable: false,
-      help: 'Create a pretty-formatted markdown2html.json config file in --input or the current directory.',
+      help:
+          'Create a pretty-formatted markdown2html.json config file in --input or the current directory.',
     )
     ..addFlag(
       'help',
@@ -64,7 +67,8 @@ void main(List<String> arguments) {
   final createConfig = results['create-config'] == true;
 
   if (createConfig) {
-    final configDirectoryPath = (inputPath != null && inputPath.trim().isNotEmpty)
+    final configDirectoryPath =
+        (inputPath != null && inputPath.trim().isNotEmpty)
         ? inputPath
         : Directory.current.path;
     _createConfigFile(configDirectoryPath);
@@ -107,7 +111,9 @@ void main(List<String> arguments) {
 
   final indexFile = File(_join(inputDir.path, '000-index.md'));
   if (!indexFile.existsSync()) {
-    stderr.writeln('000-index.md not found in input directory: ${inputDir.path}');
+    stderr.writeln(
+      '000-index.md not found in input directory: ${inputDir.path}',
+    );
     exitCode = 66;
     return;
   }
@@ -126,7 +132,9 @@ void main(List<String> arguments) {
 
   final wikiLookup = _buildLookup(markdownFilesByRelativePath.keys);
   final assetLookup = _buildLookup(
-    allFilesByRelativePath.keys.where((path) => !path.toLowerCase().endsWith('.md')),
+    allFilesByRelativePath.keys.where(
+      (path) => !path.toLowerCase().endsWith('.md'),
+    ),
   );
   final faviconAssets = config.favicons
       ? _findFaviconAssets(allFilesByRelativePath.keys)
@@ -269,6 +277,12 @@ void main(List<String> arguments) {
   {{/inlineCss}}
 </head>
 <body>
+  <header class="mobile-toolbar">
+    <button class="mobile-menu-toggle" type="button" aria-label="Toggle table of contents" aria-expanded="false">
+      <i class="bi bi-list" aria-hidden="true"></i>
+    </button>
+    <div class="mobile-toolbar-title">{{pageTitle}}</div>
+  </header>
   <div class="layout">
     <aside class="sidebar">
       {{#topNav}}
@@ -315,6 +329,14 @@ void main(List<String> arguments) {
   </div>
   <script>
     (() => {
+      const menuToggle = document.querySelector('.mobile-menu-toggle');
+      if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+          const isOpen = document.body.classList.toggle('nav-open');
+          menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+      }
+
       const lightbox = document.getElementById('lightbox');
       const lightboxImage = document.getElementById('lightbox-image');
       const closeButton = document.getElementById('lightbox-close');
@@ -476,7 +498,9 @@ void main(List<String> arguments) {
       currentMarkdownRelativePath: page.markdownRelativePath,
     );
 
-    final pageFeaturedCards = page.isIndex ? featuredCards : const <Map<String, Object>>[];
+    final pageFeaturedCards = page.isIndex
+        ? featuredCards
+        : const <Map<String, Object>>[];
 
     final html = template.renderString({
       'pageTitle': stripHtml(page.title),
@@ -489,10 +513,9 @@ void main(List<String> arguments) {
       'inlineCss': inlineCss,
       'sidebarTitle': config.sidebarTitle,
       'sidebarLogo': sidebarLogo,
-      'topNav': config.topNav == null ? null : {
-        'url': config.topNav!.url,
-        'title': config.topNav!.title,
-      },
+      'topNav': config.topNav == null
+          ? null
+          : {'url': config.topNav!.url, 'title': config.topNav!.title},
     });
 
     final outFile = File(pageHtmlFullPath);
@@ -515,10 +538,7 @@ void _createConfigFile(String directoryPath) {
     'favicons': true,
     'sidebarTitle': 'Your site',
     'footer': '999-footer.md',
-    'top-nav': {
-      'url': '/',
-      'title': 'Home',
-    },
+    'top-nav': {'url': '/', 'title': 'Home'},
   };
 
   const encoder = JsonEncoder.withIndent('  ');
@@ -534,7 +554,9 @@ Markdown2HtmlConfig _loadConfig(Directory inputDir) {
 
   final decoded = jsonDecode(configFile.readAsStringSync());
   if (decoded is! Map<String, dynamic>) {
-    stderr.writeln('Invalid config file: markdown2html.json must contain a JSON object.');
+    stderr.writeln(
+      'Invalid config file: markdown2html.json must contain a JSON object.',
+    );
     exitCode = 65;
     throw const FormatException('Invalid markdown2html.json');
   }
@@ -562,7 +584,9 @@ Map<String, String>? _buildSidebarLogo({
   );
 
   if (resolvedAssetPath == null) {
-    stderr.writeln('Warning: configured logo could not be resolved: $logoTarget');
+    stderr.writeln(
+      'Warning: configured logo could not be resolved: $logoTarget',
+    );
     return null;
   }
 
@@ -574,10 +598,7 @@ Map<String, String>? _buildSidebarLogo({
 
   return {
     'src': _encodeUrlPath(
-      _relativePath(
-        fromDirectory: currentOutputDir,
-        toFile: copiedAssetPath,
-      ),
+      _relativePath(fromDirectory: currentOutputDir, toFile: copiedAssetPath),
     ),
     'alt': config.logoAlt ?? 'Site logo',
   };
@@ -590,15 +611,22 @@ void _cleanDirectory(Directory directory) {
 }
 
 void _printUsage(ArgParser parser) {
-  if(isRunningFromDartRun) {
-    executable = "dart run bin/markdown2html.dart"; //running from dart, not an executable
+  if (isRunningFromDartRun) {
+    executable =
+        "dart run bin/markdown2html.dart"; //running from dart, not an executable
   }
-  stdout.writeln("Converts a markdown directory into a website with static HTML pages.");
+  stdout.writeln(
+    "Converts a markdown directory into a website with static HTML pages.",
+  );
   stdout.writeln("Version: $appVersion");
   stdout.writeln("");
-  stdout.writeln("Homepage: https://weatheredhiker.com/pages/markdown2html.html");
+  stdout.writeln(
+    "Homepage: https://weatheredhiker.com/pages/markdown2html.html",
+  );
   stdout.writeln("Source  : https://github.com/abathur8bit/markdown2html");
-  stdout.writeln("Issues  : https://github.com/abathur8bit/markdown2html/issues");
+  stdout.writeln(
+    "Issues  : https://github.com/abathur8bit/markdown2html/issues",
+  );
   stdout.writeln("");
   stdout.writeln("Usage: $executable -i <inputDir> -o <outputDir>");
   stdout.writeln("");
@@ -637,7 +665,8 @@ List<String> _extractWikiTargets(String markdownText) {
   return [
     for (final match in matches)
       if (match.start == 0 || markdownText[match.start - 1] != '!')
-        if ((match.group(1) ?? '').trim().isNotEmpty) (match.group(1) ?? '').trim(),
+        if ((match.group(1) ?? '').trim().isNotEmpty)
+          (match.group(1) ?? '').trim(),
   ];
 }
 
@@ -657,8 +686,10 @@ IndexSections _splitIndexContents(String markdownText) {
     }
   }
 
-  final specialSectionStarts = [if (featuredStart != null) featuredStart, if (contentsStart != null) contentsStart]
-    ..sort();
+  final specialSectionStarts = [
+    if (featuredStart != null) featuredStart,
+    if (contentsStart != null) contentsStart,
+  ]..sort();
 
   final visibleMarkdown = specialSectionStarts.isEmpty
       ? markdownText
@@ -670,7 +701,11 @@ IndexSections _splitIndexContents(String markdownText) {
       if (contentsStart != null && contentsStart > featuredStart) contentsStart,
       lines.length,
     ].reduce((a, b) => a < b ? a : b);
-    final section = lines.skip(featuredStart + 1).take(featuredEnd - featuredStart - 1).join('\n').trim();
+    final section = lines
+        .skip(featuredStart + 1)
+        .take(featuredEnd - featuredStart - 1)
+        .join('\n')
+        .trim();
     featuredMarkdown = section.isEmpty ? null : section;
   }
 
@@ -701,7 +736,9 @@ List<Map<String, Object>> _parseFeaturedCards(
 
   final cards = <Map<String, Object>>[];
   final lines = markdownText.split('\n');
-  final itemPattern = RegExp(r'^\s*-\s*\[\[([^\[\]]+)\]\]\s*\|\s*([^|]+?)\s*\|\s*(.+?)\s*$');
+  final itemPattern = RegExp(
+    r'^\s*-\s*\[\[([^\[\]]+)\]\]\s*\|\s*([^|]+?)\s*\|\s*(.+?)\s*$',
+  );
 
   for (final line in lines) {
     final match = itemPattern.firstMatch(line);
@@ -818,7 +855,8 @@ String _replaceWikiLinks({
           toFile: copiedAssetPath,
         );
 
-        final altText = rawLabel ?? _basenameWithoutExtension(resolvedAssetPath);
+        final altText =
+            rawLabel ?? _basenameWithoutExtension(resolvedAssetPath);
         return '![${_escapeMarkdownLinkText(altText)}](${_encodeUrlPath(href)})';
       }
 
@@ -857,10 +895,7 @@ String _replaceWikiLinks({
 }
 
 String _encodeUrlPath(String path) {
-  return path
-      .split('/')
-      .map(Uri.encodeComponent)
-      .join('/');
+  return path.split('/').map(Uri.encodeComponent).join('/');
 }
 
 String _replaceHtmlImageSources({
@@ -877,7 +912,8 @@ String _replaceHtmlImageSources({
   );
 
   return markdownText.replaceAllMapped(imageTagPattern, (match) {
-    final rawSource = (match.group(1) ?? match.group(2) ?? match.group(3) ?? '').trim();
+    final rawSource = (match.group(1) ?? match.group(2) ?? match.group(3) ?? '')
+        .trim();
     if (rawSource.isEmpty) {
       return match.group(0)!;
     }
@@ -1102,8 +1138,10 @@ String _extractTitle(File markdownFile) {
   final name = markdownFile.uri.pathSegments.isNotEmpty
       ? markdownFile.uri.pathSegments.last
       : markdownFile.path;
-  final withoutExtension =
-      name.replaceFirst(RegExp(r'\.md$', caseSensitive: false), '');
+  final withoutExtension = name.replaceFirst(
+    RegExp(r'\.md$', caseSensitive: false),
+    '',
+  );
 
   return withoutExtension.replaceAll(RegExp(r'[_\-]+'), ' ').trim();
 }
@@ -1130,10 +1168,7 @@ String _join(String a, String b) {
   return '$a${Platform.pathSeparator}$b';
 }
 
-String _relativePath({
-  required String fromDirectory,
-  required String toFile,
-}) {
+String _relativePath({required String fromDirectory, required String toFile}) {
   final fromParts = _splitPath(fromDirectory);
   final toParts = _splitPath(toFile);
 
@@ -1184,10 +1219,10 @@ class FeaturedCardInfo {
   final String summaryHtml;
 
   Map<String, Object> toTemplateData() => {
-        'href': href,
-        'title': title,
-        'summaryHtml': summaryHtml,
-      };
+    'href': href,
+    'title': title,
+    'summaryHtml': summaryHtml,
+  };
 }
 
 class PageInfo {
@@ -1205,7 +1240,10 @@ class PageInfo {
 }
 
 List<FaviconAsset> _findFaviconAssets(Iterable<String> relativePaths) {
-  final faviconPattern = RegExp(r'^favicon-(\d+x\d+)\.png$', caseSensitive: false);
+  final faviconPattern = RegExp(
+    r'^favicon-(\d+x\d+)\.png$',
+    caseSensitive: false,
+  );
   final favicons = <FaviconAsset>[];
 
   for (final path in relativePaths) {
@@ -1216,12 +1254,7 @@ List<FaviconAsset> _findFaviconAssets(Iterable<String> relativePaths) {
       continue;
     }
 
-    favicons.add(
-      FaviconAsset(
-        path: normalized,
-        sizes: match.group(1)!,
-      ),
-    );
+    favicons.add(FaviconAsset(path: normalized, sizes: match.group(1)!));
   }
 
   favicons.sort((a, b) => a.path.compareTo(b.path));
@@ -1232,10 +1265,7 @@ class FaviconAsset {
   final String path;
   final String sizes;
 
-  const FaviconAsset({
-    required this.path,
-    required this.sizes,
-  });
+  const FaviconAsset({required this.path, required this.sizes});
 }
 
 class Markdown2HtmlConfig {
@@ -1263,9 +1293,17 @@ class Markdown2HtmlConfig {
       logoAlt: _readNullableString(json, 'logoAlt', fallback: 'Site logo'),
       css: _readNullableString(json, 'css', fallback: 'site.css'),
       favicons: _readBool(json, 'favicons', fallback: true),
-      sidebarTitle: _readNullableString(json, 'sidebarTitle', fallback: 'Your site'),
+      sidebarTitle: _readNullableString(
+        json,
+        'sidebarTitle',
+        fallback: 'Your site',
+      ),
       footer: _readNullableString(json, 'footer', fallback: '999-footer.md'),
-      topNav: _readTopNavConfig(json, 'top-nav', fallback: const TopNavConfig()),
+      topNav: _readTopNavConfig(
+        json,
+        'top-nav',
+        fallback: const TopNavConfig(),
+      ),
     );
   }
 }
@@ -1274,12 +1312,8 @@ class TopNavConfig {
   final String url;
   final String title;
 
-  const TopNavConfig({
-    this.url = '/',
-    this.title = 'Home',
-  });
+  const TopNavConfig({this.url = '/', this.title = 'Home'});
 }
-
 
 TopNavConfig? _readTopNavConfig(
   Map<String, dynamic> json,
@@ -1302,7 +1336,9 @@ TopNavConfig? _readTopNavConfig(
   final title = _readNullableString(value, 'title');
 
   if (url == null || title == null) {
-    throw FormatException('Config value "$key" must include non-empty string values for "url" and "title".');
+    throw FormatException(
+      'Config value "$key" must include non-empty string values for "url" and "title".',
+    );
   }
 
   return TopNavConfig(url: url, title: title);
@@ -1348,8 +1384,5 @@ bool _readBool(
 
 String stripHtml(String input) {
   final document = html_parser.parse(input);
-  return document.body?.text
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim() ??
-      '';
+  return document.body?.text.replaceAll(RegExp(r'\s+'), ' ').trim() ?? '';
 }
