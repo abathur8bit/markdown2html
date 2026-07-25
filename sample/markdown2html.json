@@ -1,5 +1,6 @@
 {
   "logo": "logo-512x512.png",
+  "logoUrl": "https://bookmarksquirrel.com",
   "logoAlt": "Site logo",
   "css": "site.css",
   "favicons": true,

@@ -19,6 +19,7 @@ Configuration file controls a few things for the output.
 | Config         | Notes                                                                                                                | Example                                    |
 | -------------- |----------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
 | `logo`         | The logo file that will be shown at the top of the sidebar.                                                          | `logo.webp`                                |
+| `logoUrl`      | Optional URL to open when the sidebar or mobile toolbar logo is clicked. `null` leaves the logo unlinked.            | `null` or `https://example.com`            |
 | `logoAlt`      | the alt text for readers                                                                                             | `Site Logo`                                |
 | `css`          | The css file to be included in all pages. Supports light and dark modes.                                             | `site.css`                                 |
 | `favicons`     | Include or not, any favicon* files found.                                                                            | `true`                                     |
@@ -29,6 +30,7 @@ Configuration file controls a few things for the output.
 ```json
 {
   "logo": "logo.webp",
+  "logoUrl": null,
   "logoAlt": "Site logo",
   "css": "site.css",
   "favicons": true,

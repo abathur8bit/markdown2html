@@ -282,7 +282,14 @@ void main(List<String> arguments) {
       <i class="bi bi-list" aria-hidden="true"></i>
     </button>
     {{#sidebarLogo}}
+    {{#url}}
+    <a href="{{url}}">
+      <img class="mobile-toolbar-logo" src="{{src}}" alt="{{alt}}">
+    </a>
+    {{/url}}
+    {{^url}}
     <img class="mobile-toolbar-logo" src="{{src}}" alt="{{alt}}">
+    {{/url}}
     {{/sidebarLogo}}
     {{^sidebarLogo}}
     <div class="mobile-toolbar-title">{{mobileToolbarTitle}}</div>
@@ -299,7 +306,14 @@ void main(List<String> arguments) {
       {{/topNav}}
       {{#sidebarLogo}}
       <div class="sidebar-logo">
+        {{#url}}
+        <a href="{{url}}">
+          <img src="{{src}}" alt="{{alt}}">
+        </a>
+        {{/url}}
+        {{^url}}
         <img src="{{src}}" alt="{{alt}}">
+        {{/url}}
       </div>
       {{/sidebarLogo}}
       {{#sidebarTitle}}
@@ -564,6 +578,7 @@ void _createConfigFile(String directoryPath) {
   final configFile = File(_join(directory.path, 'markdown2html.json'));
   const defaultConfig = {
     'logo': 'logo.webp',
+    'logoUrl': null,
     'logoAlt': 'Site logo',
     'css': 'site.css',
     'favicons': true,
@@ -632,6 +647,7 @@ Map<String, String>? _buildSidebarLogo({
       _relativePath(fromDirectory: currentOutputDir, toFile: copiedAssetPath),
     ),
     'alt': config.logoAlt ?? 'Site logo',
+    if (config.logoUrl != null) 'url': config.logoUrl!,
   };
 }
 
@@ -1301,6 +1317,7 @@ class FaviconAsset {
 
 class Markdown2HtmlConfig {
   final String? logo;
+  final String? logoUrl;
   final String? logoAlt;
   final String? css;
   final bool favicons;
@@ -1310,6 +1327,7 @@ class Markdown2HtmlConfig {
 
   const Markdown2HtmlConfig({
     this.logo = 'logo.webp',
+    this.logoUrl,
     this.logoAlt = 'Site logo',
     this.css = 'site.css',
     this.favicons = true,
@@ -1321,6 +1339,7 @@ class Markdown2HtmlConfig {
   factory Markdown2HtmlConfig.fromJson(Map<String, dynamic> json) {
     return Markdown2HtmlConfig(
       logo: _readNullableString(json, 'logo', fallback: 'logo.webp'),
+      logoUrl: _readNullableString(json, 'logoUrl'),
       logoAlt: _readNullableString(json, 'logoAlt', fallback: 'Site logo'),
       css: _readNullableString(json, 'css', fallback: 'site.css'),
       favicons: _readBool(json, 'favicons', fallback: true),
